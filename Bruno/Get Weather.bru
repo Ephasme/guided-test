@@ -1,0 +1,16 @@
+meta {
+  name: Get Weather
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/weather?query=What is the weather for tomorrow&clientIP=168.220.143.250
+  body: none
+  auth: none
+}
+
+params:query {
+  query: What is the weather for tomorrow
+  clientIP: 168.220.143.250
+}

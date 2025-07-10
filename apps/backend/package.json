@@ -1,0 +1,28 @@
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch --env-file=.env src/index.ts",
+    "build": "tsc"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/luxon": "^3.6.2",
+    "@types/node": "^24.0.12",
+    "tsx": "^4.20.3",
+    "typescript": "~5.8.3"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.0.1",
+    "@guided/shared": "workspace:*",
+    "env-var": "^7.5.0",
+    "fastify": "^5.4.0",
+    "luxon": "^3.6.1",
+    "openai": "^5.8.3",
+    "zod": "^3.25.76"
+  }
+}
