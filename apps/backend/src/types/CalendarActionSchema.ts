@@ -1,19 +1,38 @@
 import { z } from "zod";
-import { calendar_v3 } from "googleapis";
 
-// Discriminated union for calendar actions
-export const CalendarActionSchema = z.discriminatedUnion("type", [
+// Natural calendar action schema
+export const CalendarActionSchema = z.discriminatedUnion("action", [
   z.object({
-    type: z.literal("insert"),
-    requestBody: z.custom<calendar_v3.Schema$Event>(),
+    action: z.literal("create"),
+    event: z.object({
+      summary: z.string(),
+      start: z.object({
+        dateTime: z.string(),
+        timeZone: z.string(),
+      }),
+      end: z.object({
+        dateTime: z.string(),
+        timeZone: z.string(),
+      }),
+      description: z.string().optional(),
+      location: z.string().optional(),
+      attendees: z.array(z.object({ email: z.string() })).optional(),
+      reminders: z.object({ useDefault: z.boolean() }).optional(),
+    }),
   }),
   z.object({
-    type: z.literal("get"),
-    params: z.custom<calendar_v3.Params$Resource$Events$Get>(),
+    action: z.literal("find"),
+    query: z.object({
+      timeMin: z.string().optional(),
+      timeMax: z.string().optional(),
+      searchTerm: z.string().optional(),
+      maxResults: z.number().optional(),
+      orderBy: z.literal("startTime").optional(),
+    }),
   }),
   z.object({
-    type: z.literal("list"),
-    params: z.custom<calendar_v3.Params$Resource$Events$List>(),
+    action: z.literal("get"),
+    eventId: z.string(),
   }),
 ]);
 

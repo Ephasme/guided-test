@@ -2,67 +2,50 @@ export function buildCalendarActionPrompt(
   userQuery: string,
   weatherInfo?: string
 ): string {
-  return `You are a calendar assistant. Analyze the user's request and determine if they want a calendar action.
+  return `You are a calendar assistant. Analyze the user's request and determine if they want to interact with their calendar.
 
-AVAILABLE ACTIONS:
+If the user wants to interact with their calendar, respond with a JSON object describing what they want to do. If no calendar interaction is needed, respond with "null".
 
-1. INSERT - Create a new event
-   Structure: {
-     "type": "insert",
-     "requestBody": {
-       "summary": string (required),
-       "start": { 
-         "dateTime": string (ISO 8601, required),
-         "timeZone": string (required)
-       },
-       "end": { 
-         "dateTime": string (ISO 8601, required),
-         "timeZone": string (required)
-       },
+AVAILABLE CALENDAR OPERATIONS:
+
+1. Create a new event:
+   {
+     "action": "create",
+     "event": {
+       "summary": string,
+       "start": { "dateTime": string (ISO 8601), "timeZone": string },
+       "end": { "dateTime": string (ISO 8601), "timeZone": string },
        "description": string (optional),
        "location": string (optional),
        "attendees": [{ "email": string }] (optional),
-       "reminders": {
-         "useDefault": boolean (optional),
-         "overrides": [{ "method": "email" | "popup", "minutes": number }] (optional)
-       } (optional)
+       "reminders": { "useDefault": boolean } (optional)
      }
    }
 
-2. GET - Retrieve a single event by ID
-   Structure: {
-     "type": "get",
-     "params": {
-       "calendarId": string (default: "primary"),
-       "eventId": string (required)
-     }
-   }
-
-3. LIST - Retrieve multiple events
-   Structure: {
-     "type": "list",
-     "params": {
-       "calendarId": string (default: "primary"),
+2. Find/retrieve events:
+   {
+     "action": "find",
+     "query": {
        "timeMin": string (ISO 8601, optional),
        "timeMax": string (ISO 8601, optional),
-       "maxResults": number (default: 250, optional),
-       "singleEvents": boolean (default: false, optional),
-       "orderBy": "startTime" | "updated" (optional),
-       "q": string (search query, optional)
+       "searchTerm": string (optional),
+       "maxResults": number (optional, default: 10),
+       "orderBy": "startTime" (optional)
      }
    }
 
-RULES:
-- ONLY respond with a JSON object if the user wants a calendar action
-- If no calendar action is needed, respond with null
-- Use weatherInfo as context when creating events
-- For time ranges, use ISO 8601 format (e.g., "2024-07-12T00:00:00Z")
-- Default timeZone is "UTC" unless specified
+3. Get a specific event by ID:
+   {
+     "action": "get",
+     "eventId": string
+   }
 
 EXAMPLES:
-- "Add rain forecast to my calendar" → INSERT with weather context
-- "Show my events for tomorrow" → LIST with timeMin/timeMax
-- "Get event with ID abc123" → GET with eventId
+- "Add a meeting with John tomorrow at 2pm" → create event
+- "What's my next meeting?" → find events with timeMin: now, orderBy: "startTime"
+- "Show my meetings with John" → find events with searchTerm: "John"
+- "What's the weather for my next meeting?" → find events to get next meeting
+- "Get event abc123" → get specific event
 - "What's the weather?" → null (no calendar action)
 
 User query: "${userQuery}"
