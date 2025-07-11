@@ -6,7 +6,8 @@ import {
 } from "@guided/shared";
 import env from "env-var";
 import { OpenAI } from "openai";
-import { generateWeatherAPIQueryFromUserInput } from "../utils/generateWeatherAPIQuery";
+import { extractWeatherQueryFromUserInput } from "../utils/extractWeatherQuery";
+import { extractCalendarActionFromUserInput } from "../utils/extractCalendarAction";
 import {
   resolveUserLocation,
   getTodayForTimezone,
@@ -34,27 +35,39 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
     const locationName = `${city}, ${countryName}`;
     const today = getTodayForTimezone(timezone);
 
-    const weatherQuery = await generateWeatherAPIQueryFromUserInput(
+    // Step 1: Extract weather query
+    const weatherApiQuery = await extractWeatherQueryFromUserInput(
       openai,
       query,
       today,
       locationName
     );
 
-    const weatherData = await fetchWeatherData(weatherQuery);
+    // Step 2: Fetch weather data
+    const weatherData = await fetchWeatherData(weatherApiQuery);
 
+    // Step 3: Optionally extract calendar action
+    const weatherSummary = weatherData.current?.condition?.text || "";
+    const calendarAction = await extractCalendarActionFromUserInput(
+      openai,
+      query,
+      weatherSummary
+    );
+
+    console.log("calendarAction", calendarAction);
+
+    // Step 4: Humanize weather info
     const weatherResponse = await humanizeWeatherInfo(
       openai,
       weatherData,
       query
     );
 
-    console.log(weatherResponse);
-
     const response = {
       location: weatherData.location.name,
       forecast: weatherResponse,
       query,
+      calendarAction,
     };
 
     return WeatherResponseSchema.parse(response);

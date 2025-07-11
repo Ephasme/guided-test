@@ -5,7 +5,7 @@ import {
 } from "../types/WeatherAPIQuerySchema";
 import { buildWeatherQueryPrompt } from "./buildWeatherQueryPrompt";
 
-export async function generateWeatherAPIQueryFromUserInput(
+export async function extractWeatherQueryFromUserInput(
   openai: OpenAI,
   userQuery: string,
   today: string,
@@ -25,7 +25,7 @@ export async function generateWeatherAPIQueryFromUserInput(
     const parsed = JSON.parse(raw);
     return WeatherAPIQuerySchema.parse(parsed);
   } catch (err) {
-    console.error("Failed to parse GPT response:", raw);
+    console.error("Failed to parse weather query:", raw);
     throw new Error("Invalid WeatherAPI query generated from LLM");
   }
 }

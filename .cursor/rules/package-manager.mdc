@@ -1,0 +1,4 @@
+---
+description: When running tasks defined in package.json use PNPM only.
+alwaysApply: false
+---

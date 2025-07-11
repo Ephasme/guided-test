@@ -1,10 +1,16 @@
 import { WeatherAPIQuery } from "../types/WeatherAPIQuerySchema";
+import {
+  WeatherAPIResponseSchema,
+  WeatherAPIResponse,
+} from "../types/WeatherAPIResponse";
 import { get } from "env-var";
 
 const WEATHER_API_URL = get("WEATHER_API_URL").required().asString();
 const WEATHER_API_KEY = get("WEATHER_API_KEY").required().asString();
 
-export async function fetchWeatherData(query: WeatherAPIQuery) {
+export async function fetchWeatherData(
+  query: WeatherAPIQuery
+): Promise<WeatherAPIResponse> {
   const params = new URLSearchParams({
     key: WEATHER_API_KEY,
     q: query.q,
@@ -26,6 +32,17 @@ export async function fetchWeatherData(query: WeatherAPIQuery) {
     throw new Error(`WeatherAPI failed with status ${res.status}`);
   }
 
-  const data = await res.json();
-  return data;
+  const rawData = await res.json();
+
+  // Validate the response with Zod schema
+  const validationResult = WeatherAPIResponseSchema.safeParse(rawData);
+  if (!validationResult.success) {
+    console.error(
+      "WeatherAPI response validation failed:",
+      validationResult.error
+    );
+    throw new Error("Invalid response from WeatherAPI");
+  }
+
+  return validationResult.data;
 }
