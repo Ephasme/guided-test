@@ -28,10 +28,11 @@ function WeatherApp() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get("session_id");
+    const state = urlParams.get("state");
 
     if (sessionId) {
       // Handle session ID from backend redirect approach
-      handleSessionCallback(sessionId);
+      handleSessionCallback(sessionId, state || undefined);
       // Clear the URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
     }

@@ -3,10 +3,10 @@ import {
   WeatherAPIResponseSchema,
   WeatherAPIResponse,
 } from "../types/WeatherAPIResponse";
-import { get } from "env-var";
+import env from "env-var";
 
-const WEATHER_API_URL = get("WEATHER_API_URL").required().asString();
-const WEATHER_API_KEY = get("WEATHER_API_KEY").required().asString();
+const WEATHER_API_URL = env.get("WEATHER_API_URL").required().asString();
+const WEATHER_API_KEY = env.get("WEATHER_API_KEY").required().asString();
 
 export async function fetchWeatherData(
   query: WeatherAPIQuery

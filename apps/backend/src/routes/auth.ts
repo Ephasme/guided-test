@@ -2,6 +2,10 @@ import { FastifyPluginAsync } from "fastify";
 import { google } from "googleapis";
 import env from "env-var";
 import { TokenService } from "../services/tokenService";
+import {
+  OAuthCallbackQuerySchema,
+  SessionParamSchema,
+} from "../types/AuthSchemas";
 
 const GOOGLE_CLIENT_ID = env.get("GOOGLE_CLIENT_ID").required().asString();
 const GOOGLE_CLIENT_SECRET = env
@@ -11,13 +15,15 @@ const GOOGLE_CLIENT_SECRET = env
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/callback", async (request, reply) => {
-    const { code } = request.query as { code: string };
-
-    if (!code) {
-      return reply
-        .status(400)
-        .send({ error: "Authorization code is required" });
+    const result = OAuthCallbackQuerySchema.safeParse(request.query);
+    if (!result.success) {
+      return reply.status(400).send({
+        error: "Invalid query parameters",
+        details: result.error.issues,
+      });
     }
+
+    const { code, state } = result.data;
 
     try {
       const oauth2Client = new google.auth.OAuth2(
@@ -38,6 +44,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       const frontendUrl = new URL("http://localhost:5173");
       frontendUrl.searchParams.set("session_id", sessionId);
+      frontendUrl.searchParams.set("state", state);
 
       return reply.redirect(frontendUrl.toString());
     } catch (error) {
@@ -49,7 +56,15 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   fastify.get("/session/:sessionId", async (request, reply) => {
-    const { sessionId } = request.params as { sessionId: string };
+    const result = SessionParamSchema.safeParse(request.params);
+    if (!result.success) {
+      return reply.status(400).send({
+        error: "Invalid session ID",
+        details: result.error.issues,
+      });
+    }
+
+    const { sessionId } = result.data;
 
     if (!TokenService.hasTokens(sessionId)) {
       return reply.status(404).send({ error: "Session not found" });
@@ -62,7 +77,15 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   fastify.delete("/session/:sessionId", async (request, reply) => {
-    const { sessionId } = request.params as { sessionId: string };
+    const result = SessionParamSchema.safeParse(request.params);
+    if (!result.success) {
+      return reply.status(400).send({
+        error: "Invalid session ID",
+        details: result.error.issues,
+      });
+    }
+
+    const { sessionId } = result.data;
 
     TokenService.removeTokens(sessionId);
 

@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "tsx watch --env-file=.env src/index.ts",
-    "build": "tsc"
+    "build": "tsc",
+    "lint": "echo \"No linting configured for backend\"",
+    "clean": "rm -rf dist"
   },
   "keywords": [],
   "author": "",

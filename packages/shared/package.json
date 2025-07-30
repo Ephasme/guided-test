@@ -4,7 +4,10 @@
   "description": "",
   "main": "dist/index.js",
   "scripts": {
-    "build": "tsc -p tsconfig.json"
+    "build": "tsc -p tsconfig.json",
+    "dev": "echo \"No dev script for shared package\"",
+    "lint": "echo \"No linting configured for shared package\"",
+    "clean": "rm -rf dist"
   },
   "keywords": [],
   "author": "",

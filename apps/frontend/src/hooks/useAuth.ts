@@ -21,6 +21,20 @@ export const useAuth = () => {
     if (sessionId) {
       verifySession(sessionId);
     }
+
+    return () => {
+      const oauthState = localStorage.getItem("oauth_state");
+      if (oauthState) {
+        const stateTimestamp = localStorage.getItem("oauth_state_timestamp");
+        if (stateTimestamp) {
+          const age = Date.now() - parseInt(stateTimestamp);
+          if (age > 10 * 60 * 1000) {
+            localStorage.removeItem("oauth_state");
+            localStorage.removeItem("oauth_state_timestamp");
+          }
+        }
+      }
+    };
   }, []);
 
   const verifySession = async (sessionId: string) => {
@@ -62,11 +76,22 @@ export const useAuth = () => {
     const state = Math.random().toString(36).substring(7);
     authUrl.searchParams.set("state", state);
     localStorage.setItem("oauth_state", state);
+    localStorage.setItem("oauth_state_timestamp", Date.now().toString());
 
     window.location.href = authUrl.toString();
   };
 
-  const handleSessionCallback = async (sessionId: string) => {
+  const handleSessionCallback = async (sessionId: string, state?: string) => {
+    if (state) {
+      const storedState = localStorage.getItem("oauth_state");
+      if (!storedState || storedState !== state) {
+        console.error("OAuth state validation failed");
+        localStorage.removeItem("oauth_state");
+        return;
+      }
+      localStorage.removeItem("oauth_state");
+    }
+
     localStorage.setItem("google_session_id", sessionId);
     await verifySession(sessionId);
   };
