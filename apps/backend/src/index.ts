@@ -1,17 +1,18 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import weatherRoutes from "./routes/weather";
+import authRoutes from "./routes/auth";
 
 async function startServer() {
   const server = Fastify();
 
-  // Enable CORS
   await server.register(cors, {
-    origin: true, // Allow all origins in development
+    origin: true,
     credentials: true,
   });
 
   server.register(weatherRoutes, { prefix: "/weather" });
+  server.register(authRoutes, { prefix: "/auth" });
 
   server.listen({ port: 3000 }, (err) => {
     if (err) {

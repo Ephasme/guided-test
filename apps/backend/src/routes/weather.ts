@@ -15,6 +15,8 @@ import {
 import { extractClientIp } from "../utils/extractClientIp";
 import { fetchWeatherData } from "../services/fetchWeatherData";
 import { humanizeWeatherInfo } from "../services/humanizeWeatherInfo";
+import { CalendarService } from "../services/calendarService";
+import { TokenService } from "../services/tokenService";
 
 const OPENAI_API_KEY = env.get("OPENAI_API_KEY").required().asString();
 
@@ -28,7 +30,7 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
     if (!result.success) {
       return reply.status(400).send({ error: "Invalid query" });
     }
-    const { query, clientIP } = result.data;
+    const { query, clientIP, sessionId } = result.data;
 
     const ip = clientIP || extractClientIp(request);
     const { city, countryName, timezone } = await resolveUserLocation(ip);
@@ -56,7 +58,25 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
 
     console.log("calendarAction", calendarAction);
 
-    // Step 4: Humanize weather info
+    // Step 4: Execute calendar action if present and session is available
+    let calendarResult = null;
+    if (calendarAction && sessionId) {
+      try {
+        const tokens = TokenService.getTokens(sessionId);
+        if (tokens) {
+          const calendarService = new CalendarService(tokens.access_token);
+          calendarResult = await calendarService.executeCalendarAction(
+            calendarAction
+          );
+          console.log("Calendar result:", calendarResult);
+        }
+      } catch (error) {
+        console.error("Calendar action failed:", error);
+        // Don't fail the entire request, just log the error
+      }
+    }
+
+    // Step 5: Humanize weather info
     const weatherResponse = await humanizeWeatherInfo(
       openai,
       weatherData,
@@ -68,6 +88,7 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
       forecast: weatherResponse,
       query,
       calendarAction,
+      calendarResult, // Add calendar result to response
     };
 
     return WeatherResponseSchema.parse(response);
