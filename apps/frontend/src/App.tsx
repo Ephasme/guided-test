@@ -25,7 +25,6 @@ function WeatherApp() {
   } = useAuth();
   const weatherQuery = useWeatherQuery(submittedQuery, sessionId || undefined);
 
-  // Handle OAuth callback
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get("session_id");
@@ -124,7 +123,6 @@ function WeatherApp() {
           </div>
         </form>
 
-        {/* Quick Examples */}
         <div className="mb-8">
           <p className="text-sm text-gray-600 mb-3">Try these examples:</p>
           <div className="flex flex-wrap gap-2">
@@ -152,7 +150,6 @@ function WeatherApp() {
           </div>
         </div>
 
-        {/* Error Display */}
         {weatherQuery.error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <div className="flex items-center gap-2">
@@ -167,7 +164,6 @@ function WeatherApp() {
           </div>
         )}
 
-        {/* Weather Results */}
         {weatherQuery.data && (
           <div className="bg-white rounded-lg shadow-lg p-6 border border-gray-200">
             <div className="bg-gray-50 rounded-lg p-4">
@@ -176,7 +172,6 @@ function WeatherApp() {
               </p>
             </div>
 
-            {/* Calendar Action Results */}
             {weatherQuery.data.calendarResult && (
               <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">

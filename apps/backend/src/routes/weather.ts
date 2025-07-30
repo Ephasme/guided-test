@@ -87,7 +87,6 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
       location: weatherData.location.name,
       forecast: weatherResponse,
       query,
-      calendarAction,
       calendarResult, // Add calendar result to response
     };
 

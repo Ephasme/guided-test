@@ -5,7 +5,6 @@ interface StoredTokens {
   access_token: string;
   refresh_token: string;
   expires_in: number;
-  user_id: string;
   created_at: Date;
 }
 
@@ -22,7 +21,6 @@ export class TokenService {
   }
 
   private static getEncryptionKey(): Buffer {
-    // Use PBKDF2 to derive a 32-byte key from the environment variable
     return crypto.pbkdf2Sync(this.ENCRYPTION_KEY, "salt", 100000, 32, "sha256");
   }
 
@@ -53,7 +51,6 @@ export class TokenService {
       access_token: this.encrypt(tokens.access_token),
       refresh_token: this.encrypt(tokens.refresh_token),
       expires_in: tokens.expires_in,
-      user_id: tokens.user_id,
       created_at: new Date(),
     };
 
@@ -68,7 +65,6 @@ export class TokenService {
       access_token: this.decrypt(encryptedTokens.access_token),
       refresh_token: this.decrypt(encryptedTokens.refresh_token),
       expires_in: encryptedTokens.expires_in,
-      user_id: encryptedTokens.user_id,
     };
   }
 

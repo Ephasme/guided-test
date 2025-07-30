@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-// Natural calendar action schema
+// Calendar Action Schema for internal backend use
 export const CalendarActionSchema = z.discriminatedUnion("action", [
   z.object({
     action: z.literal("create"),
