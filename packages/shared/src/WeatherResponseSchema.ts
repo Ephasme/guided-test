@@ -4,7 +4,11 @@ export const WeatherResponseSchema = z.object({
   location: z.string().min(1, "Location is required"),
   forecast: z.string().min(1, "Forecast is required"),
   query: z.string().min(1, "Query is required"),
-  calendarResult: z.any().optional(), // Calendar operation result
+  calendarResult: z
+    .object({
+      message: z.string(),
+    })
+    .optional(),
 });
 
 export type WeatherResponse = z.infer<typeof WeatherResponseSchema>;

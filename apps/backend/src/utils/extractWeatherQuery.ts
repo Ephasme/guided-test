@@ -24,7 +24,7 @@ export async function extractWeatherQueryFromUserInput(
   try {
     const parsed = JSON.parse(raw);
     return WeatherAPIQuerySchema.parse(parsed);
-  } catch (err) {
+  } catch {
     console.error("Failed to parse weather query:", raw);
     throw new Error("Invalid WeatherAPI query generated from LLM");
   }

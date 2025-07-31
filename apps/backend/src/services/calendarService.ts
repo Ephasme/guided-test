@@ -1,15 +1,21 @@
 import { google } from "googleapis";
+import { calendar_v3, Auth } from "googleapis";
 import { CalendarAction } from "../types/CalendarActionSchema";
+import { CalendarResult } from "../types/CalendarResult";
+
+type Calendar = calendar_v3.Calendar;
+type Event = calendar_v3.Schema$Event;
+type OAuth2Client = Auth.OAuth2Client;
 
 export class CalendarService {
-  private oauth2Client: any;
+  private oauth2Client: OAuth2Client;
 
   constructor(accessToken: string) {
     this.oauth2Client = new google.auth.OAuth2();
     this.oauth2Client.setCredentials({ access_token: accessToken });
   }
 
-  async executeCalendarAction(action: CalendarAction): Promise<any> {
+  async executeCalendarAction(action: CalendarAction): Promise<CalendarResult> {
     const calendar = google.calendar({
       version: "v3",
       auth: this.oauth2Client,
@@ -22,19 +28,25 @@ export class CalendarService {
         return this.findEvents(calendar, action.query);
       case "get":
         return this.getEvent(calendar, action.eventId);
-      default:
-        throw new Error(`Unknown calendar action: ${(action as any).action}`);
+      default: {
+        const exhaustiveCheck: never = action;
+        throw new Error(`Unknown calendar action: ${exhaustiveCheck}`);
+      }
     }
   }
 
-  private async createEvent(calendar: any, eventData: any) {
+  private async createEvent(
+    calendar: Calendar,
+    eventData: Event
+  ): Promise<CalendarResult> {
     try {
       const response = await calendar.events.insert({
         calendarId: "primary",
-        resource: eventData,
+        requestBody: eventData,
       });
       return {
         success: true,
+        action: "create",
         event: response.data,
         message: "Event created successfully",
       };
@@ -44,7 +56,16 @@ export class CalendarService {
     }
   }
 
-  private async findEvents(calendar: any, query: any) {
+  private async findEvents(
+    calendar: Calendar,
+    query: {
+      timeMin?: string;
+      timeMax?: string;
+      searchTerm?: string;
+      maxResults?: number;
+      orderBy?: string;
+    }
+  ): Promise<CalendarResult> {
     try {
       const response = await calendar.events.list({
         calendarId: "primary",
@@ -57,6 +78,7 @@ export class CalendarService {
       });
       return {
         success: true,
+        action: "find",
         events: response.data.items || [],
         message: `Found ${response.data.items?.length || 0} events`,
       };
@@ -66,7 +88,10 @@ export class CalendarService {
     }
   }
 
-  private async getEvent(calendar: any, eventId: string) {
+  private async getEvent(
+    calendar: Calendar,
+    eventId: string
+  ): Promise<CalendarResult> {
     try {
       const response = await calendar.events.get({
         calendarId: "primary",
@@ -74,6 +99,7 @@ export class CalendarService {
       });
       return {
         success: true,
+        action: "get",
         event: response.data,
         message: "Event retrieved successfully",
       };

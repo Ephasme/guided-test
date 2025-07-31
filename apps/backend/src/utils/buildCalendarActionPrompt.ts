@@ -1,10 +1,20 @@
+import { DateTime } from "luxon";
+
 export function buildCalendarActionPrompt(
   userQuery: string,
   weatherInfo?: string
 ): string {
-  return `You are a calendar assistant. Analyze the user's request and determine if they want to interact with their calendar.
+  const now = DateTime.now();
+  const today = now.startOf("day");
+  const tomorrow = today.plus({ days: 1 });
+  const endOfToday = today.endOf("day");
+  const endOfTomorrow = tomorrow.endOf("day");
 
-If the user wants to interact with their calendar, respond with a JSON object describing what they want to do. If no calendar interaction is needed, respond with "null".
+  return `You are a calendar assistant. Analyze the user's request and determine if they need calendar data to fulfill their request.
+
+If the user's request requires calendar data (whether for calendar operations, weather queries, or any other purpose), respond with a JSON object describing what calendar data they need. If no calendar data is needed, respond with "null".
+
+IMPORTANT: Always use actual ISO 8601 datetime strings (e.g., "2024-01-15T10:30:00Z") for timeMin and timeMax values.
 
 AVAILABLE CALENDAR OPERATIONS:
 
@@ -22,7 +32,7 @@ AVAILABLE CALENDAR OPERATIONS:
      }
    }
 
-2. Find/retrieve events:
+2. Find/retrieve events (for any purpose that needs calendar data):
    {
      "action": "find",
      "query": {
@@ -42,11 +52,13 @@ AVAILABLE CALENDAR OPERATIONS:
 
 EXAMPLES:
 - "Add a meeting with John tomorrow at 2pm" → create event
-- "What's my next meeting?" → find events with timeMin: now, orderBy: "startTime"
+- "What's my next meeting?" → find events with timeMin: "${now.toISO()}", orderBy: "startTime"
 - "Show my meetings with John" → find events with searchTerm: "John"
-- "What's the weather for my next meeting?" → find events to get next meeting
+- "What meetings do I have today?" → find events with timeMin: "${today.toISO()}", timeMax: "${endOfToday.toISO()}"
+- "What's on my calendar tomorrow?" → find events with timeMin: "${tomorrow.toISO()}", timeMax: "${endOfTomorrow.toISO()}"
 - "Get event abc123" → get specific event
-- "What's the weather?" → null (no calendar action)
+- "What's the weather for my next meeting?" → find events with timeMin: "${now.toISO()}", orderBy: "startTime", maxResults: 1
+- "What's the weather?" → null (no calendar data needed)
 
 User query: "${userQuery}"
 Weather info: "${weatherInfo || "None"}"`;

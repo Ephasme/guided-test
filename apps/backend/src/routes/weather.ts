@@ -17,6 +17,7 @@ import { fetchWeatherData } from "../services/fetchWeatherData";
 import { humanizeWeatherInfo } from "../services/humanizeWeatherInfo";
 import { CalendarService } from "../services/calendarService";
 import { TokenService } from "../services/tokenService";
+import { CalendarResult } from "../types/CalendarResult";
 
 const OPENAI_API_KEY = env.get("OPENAI_API_KEY").required().asString();
 
@@ -59,7 +60,7 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
     console.log("calendarAction", calendarAction);
 
     // Step 4: Execute calendar action if present and session is available
-    let calendarResult = null;
+    let calendarResult: CalendarResult | undefined = undefined;
     if (calendarAction && sessionId) {
       try {
         const tokens = TokenService.getTokens(sessionId);
@@ -68,7 +69,7 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
           calendarResult = await calendarService.executeCalendarAction(
             calendarAction
           );
-          console.log("Calendar result:", calendarResult);
+          console.log("Calendar action result:", calendarResult);
         }
       } catch (error) {
         console.error("Calendar action failed:", error);
@@ -80,14 +81,17 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
     const weatherResponse = await humanizeWeatherInfo(
       openai,
       weatherData,
-      query
+      query,
+      calendarResult
     );
 
     const response = {
       location: weatherData.location.name,
       forecast: weatherResponse,
       query,
-      calendarResult, // Add calendar result to response
+      calendarResult: calendarResult
+        ? { message: calendarResult.message }
+        : undefined,
     };
 
     return WeatherResponseSchema.parse(response);

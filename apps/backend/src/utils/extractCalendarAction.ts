@@ -20,11 +20,13 @@ export async function extractCalendarActionFromUserInput(
 
   const raw = response.choices[0]?.message?.content || "";
 
+  console.log("raw", raw);
+
   try {
     if (raw.trim() === "null") return undefined;
     const parsed = JSON.parse(raw);
     return CalendarActionSchema.parse(parsed);
-  } catch (err) {
+  } catch {
     console.error("Failed to parse calendar action:", raw);
     return undefined;
   }

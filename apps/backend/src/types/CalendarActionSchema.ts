@@ -16,7 +16,7 @@ export const CalendarActionSchema = z.discriminatedUnion("action", [
       }),
       description: z.string().optional(),
       location: z.string().optional(),
-      attendees: z.array(z.object({ email: z.string() })).optional(),
+      attendees: z.array(z.object({ email: z.string().email() })).optional(),
       reminders: z.object({ useDefault: z.boolean() }).optional(),
     }),
   }),
