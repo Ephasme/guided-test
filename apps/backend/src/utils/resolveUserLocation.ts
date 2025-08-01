@@ -1,6 +1,5 @@
 // packages/shared/src/utils/resolveUserLocation.ts
 import { DateTime } from "luxon";
-import env from "env-var";
 import { z } from "zod";
 import {
   AppError,
@@ -46,7 +45,7 @@ type LocationData = {
   timezone: string;
 };
 
-const IPAPI_API_KEY = env.get("IPAPI_API_KEY").required().asString();
+import { config } from "../config";
 
 export async function resolveUserLocation(ip: string): Promise<LocationData> {
   try {
@@ -54,7 +53,7 @@ export async function resolveUserLocation(ip: string): Promise<LocationData> {
     const timeoutId = setTimeout(() => controller.abort(), 10000);
 
     const res = await fetch(
-      `https://ipapi.co/${ip}/json/?key=${IPAPI_API_KEY}`,
+      `https://ipapi.co/${ip}/json/?key=${config.ipapi.apiKey}`,
       { signal: controller.signal }
     );
     clearTimeout(timeoutId);

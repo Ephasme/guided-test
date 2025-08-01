@@ -1,17 +1,11 @@
 import { FastifyPluginAsync } from "fastify";
 import { google } from "googleapis";
-import env from "env-var";
 import { TokenService } from "../services/tokenService";
 import {
   OAuthCallbackQuerySchema,
   SessionParamSchema,
 } from "../types/AuthSchemas";
-
-const GOOGLE_CLIENT_ID = env.get("GOOGLE_CLIENT_ID").required().asString();
-const GOOGLE_CLIENT_SECRET = env
-  .get("GOOGLE_CLIENT_SECRET")
-  .required()
-  .asString();
+import { config } from "../config";
 
 const authRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get("/callback", async (request, reply) => {
@@ -27,8 +21,8 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     try {
       const oauth2Client = new google.auth.OAuth2(
-        GOOGLE_CLIENT_ID,
-        GOOGLE_CLIENT_SECRET,
+        config.google.clientId,
+        config.google.clientSecret,
         "http://localhost:3000/auth/callback"
       );
 

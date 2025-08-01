@@ -1,0 +1,108 @@
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { vi } from "vitest";
+import { SMSRegistration } from "./SMSRegistration";
+import { useAuth } from "../hooks/useAuth";
+
+vi.mock("../hooks/useAuth");
+vi.mock("../utils/getPublicIP", () => ({
+  getPublicIP: vi.fn().mockResolvedValue("192.168.1.1"),
+}));
+
+const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+
+describe("SMSRegistration", () => {
+  beforeEach(() => {
+    global.fetch = vi.fn();
+  });
+
+  it("should not render when no session ID", () => {
+    mockUseAuth.mockReturnValue({ sessionId: null } as any);
+
+    render(<SMSRegistration />);
+
+    expect(
+      screen.queryByText("📱 SMS Weather Notifications")
+    ).not.toBeInTheDocument();
+  });
+
+  it("should render when session ID is available", () => {
+    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as any);
+
+    render(<SMSRegistration />);
+
+    expect(
+      screen.getByText("📱 SMS Weather Notifications")
+    ).toBeInTheDocument();
+  });
+
+  it("should show registration form when not registered", () => {
+    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as any);
+
+    (global.fetch as any).mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ notificationsEnabled: false }),
+    });
+
+    render(<SMSRegistration />);
+
+    expect(screen.getByText("Enable")).toBeInTheDocument();
+  });
+
+  it("should handle registration", async () => {
+    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as any);
+
+    (global.fetch as any)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ notificationsEnabled: false }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ success: true }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ notificationsEnabled: true }),
+      });
+
+    render(<SMSRegistration />);
+
+    const input = screen.getByPlaceholderText("+33123456789 or 0123456789");
+    const button = screen.getByText("Enable");
+
+    fireEvent.change(input, { target: { value: "+33123456789" } });
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("SMS number registered successfully!")
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("should handle registration error", async () => {
+    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as any);
+
+    (global.fetch as any)
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ notificationsEnabled: false }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: "Invalid phone number" }),
+      });
+
+    render(<SMSRegistration />);
+
+    const input = screen.getByPlaceholderText("+33123456789 or 0123456789");
+    const button = screen.getByText("Enable");
+
+    fireEvent.change(input, { target: { value: "+33123456789" } });
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(screen.getByText("Invalid phone number")).toBeInTheDocument();
+    });
+  });
+});

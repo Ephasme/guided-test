@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import Fastify, { FastifyInstance } from "fastify";
+import { FastifyInstance } from "fastify";
 import weatherRoutes from "../../routes/weather";
 import { WeatherResponse } from "@guided/shared";
 import { CalendarServiceFactory } from "../../services/calendarServiceFactory";
+import { OpenAI } from "openai";
 
 vi.mock("env-var", () => ({
   default: {
@@ -12,6 +13,20 @@ vi.mock("env-var", () => ({
         asString: () => {
           if (key === "OPENAI_API_KEY") return "test-openai-key";
           return "test-value";
+        },
+      }),
+      default: (value: any) => ({
+        asString: () => {
+          if (key === "OPENAI_API_KEY") return "test-openai-key";
+          return value || "test-value";
+        },
+        asPortNumber: () => {
+          if (key === "PORT") return 3000;
+          return 3000;
+        },
+        asIntPositive: () => {
+          if (key === "NOTIFICATION_INTERVAL_MS") return 900000;
+          return 900000;
         },
       }),
     })),
@@ -52,24 +67,19 @@ vi.mock("../../services/tokenService", () => ({
 describe("Weather Routes", () => {
   let app: FastifyInstance;
   let mockCalendarServiceFactory: CalendarServiceFactory;
+  let mockOpenAI: OpenAI;
 
   beforeEach(async () => {
-    app = Fastify();
-
-    const mockCalendarService = {
-      executeCalendarAction: vi.fn(),
-      oauth2Client: {},
-      createEvent: vi.fn(),
-      findEvents: vi.fn(),
-      getEvent: vi.fn(),
-    } as any;
-
     mockCalendarServiceFactory = {
-      create: vi.fn().mockReturnValue(mockCalendarService),
-    } as any;
+      create: vi.fn(),
+    };
 
+    mockOpenAI = {} as OpenAI;
+
+    app = await import("fastify").then(({ default: fastify }) => fastify());
     await app.register(weatherRoutes, {
       calendarServiceFactory: mockCalendarServiceFactory,
+      openai: mockOpenAI,
     });
 
     vi.clearAllMocks();

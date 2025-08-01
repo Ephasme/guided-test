@@ -3,16 +3,13 @@ import {
   WeatherAPIResponseSchema,
   WeatherAPIResponse,
 } from "../types/WeatherAPIResponse";
-import env from "env-var";
-
-const WEATHER_API_URL = env.get("WEATHER_API_URL").required().asString();
-const WEATHER_API_KEY = env.get("WEATHER_API_KEY").required().asString();
+import { config } from "../config";
 
 export async function fetchWeatherData(
   query: WeatherAPIQuery
 ): Promise<WeatherAPIResponse> {
   const params = new URLSearchParams({
-    key: WEATHER_API_KEY,
+    key: config.weather.apiKey,
     q: query.q,
     days: String(query.days),
     alerts: query.alerts ?? "yes",
@@ -23,7 +20,7 @@ export async function fetchWeatherData(
   if (query.dt) params.append("dt", query.dt);
   if (query.hour !== undefined) params.append("hour", String(query.hour));
 
-  const url = `${WEATHER_API_URL}?${params.toString()}`;
+  const url = `${config.weather.apiUrl}?${params.toString()}`;
 
   const res = await fetch(url);
   if (!res.ok) {

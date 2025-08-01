@@ -3,7 +3,6 @@ import {
   WeatherResponseSchema,
   WeatherResponse,
 } from "@guided/shared";
-import env from "env-var";
 import { OpenAI } from "openai";
 import { extractWeatherQueryFromUserInput } from "../utils/extractWeatherQuery";
 import { extractCalendarActionFromUserInput } from "../utils/extractCalendarAction";
@@ -16,12 +15,11 @@ import { fetchWeatherData } from "../services/fetchWeatherData";
 import { humanizeWeatherInfo } from "../services/humanizeWeatherInfo";
 import { TokenService } from "../services/tokenService";
 import { CalendarResult } from "../types/CalendarResult";
-import { WeatherRoutesPlugin } from "../types/weatherRoutes";
-
-const OPENAI_API_KEY = env.get("OPENAI_API_KEY").required().asString();
+import { WeatherRoutesPlugin } from "../types/WeatherRoutes";
+import { config } from "../config";
 
 const openai = new OpenAI({
-  apiKey: OPENAI_API_KEY,
+  apiKey: config.openai.apiKey,
 });
 
 const weatherRoutes: WeatherRoutesPlugin = async (fastify, options) => {

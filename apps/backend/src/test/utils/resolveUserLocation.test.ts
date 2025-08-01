@@ -13,6 +13,20 @@ vi.mock("env-var", () => ({
           return "test-value";
         },
       }),
+      default: (value: any) => ({
+        asString: () => {
+          if (key === "IPAPI_API_KEY") return "test-ipapi-key";
+          return value || "test-value";
+        },
+        asPortNumber: () => {
+          if (key === "PORT") return 3000;
+          return 3000;
+        },
+        asIntPositive: () => {
+          if (key === "NOTIFICATION_INTERVAL_MS") return 900000;
+          return 900000;
+        },
+      }),
     })),
   },
 }));

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useWeatherQuery } from "./hooks/useWeatherQuery";
 import { useAuth } from "./hooks/useAuth";
+import { SMSRegistration } from "./components/SMSRegistration";
 
 // Create a client
 const queryClient = new QueryClient({
@@ -95,6 +96,9 @@ function WeatherApp() {
             </div>
           </div>
         </div>
+
+        {/* SMS Registration */}
+        <SMSRegistration />
 
         {/* Input Form */}
         <form onSubmit={handleSubmit} className="mb-8">
