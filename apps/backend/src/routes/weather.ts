@@ -57,8 +57,6 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
       weatherSummary
     );
 
-    console.log("calendarAction", calendarAction);
-
     // Step 4: Execute calendar action if present and session is available
     let calendarResult: CalendarResult | undefined = undefined;
     if (calendarAction && sessionId) {
@@ -69,7 +67,6 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
           calendarResult = await calendarService.executeCalendarAction(
             calendarAction
           );
-          console.log("Calendar action result:", calendarResult);
         }
       } catch (error) {
         console.error("Calendar action failed:", error);
