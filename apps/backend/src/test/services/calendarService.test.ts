@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { CalendarService } from "../../services/calendarService";
 import { CalendarAction } from "../../types/CalendarActionSchema";
@@ -15,7 +14,7 @@ describe("CalendarService", () => {
     it("should handle unknown action", async () => {
       const action = {
         action: "unknown",
-      } as any;
+      } as unknown as CalendarAction;
 
       await expect(
         calendarService.executeCalendarAction(action)

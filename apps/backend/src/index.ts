@@ -9,6 +9,7 @@ import { TwilioService } from "./services/twilioService";
 import { CalendarServiceFactory } from "./services/calendarServiceFactory";
 import { NotificationService } from "./services/notificationService";
 import { NotificationScheduler } from "./jobs/notificationScheduler";
+import { OpenAIService } from "./services/openaiService";
 import OpenAI from "openai";
 import { Twilio } from "twilio";
 import { config } from "./config";
@@ -21,6 +22,7 @@ async function startServer() {
   const openai = new OpenAI({
     apiKey: config.openai.apiKey,
   });
+  const openaiService = new OpenAIService(openai);
   const twilioClient = new Twilio(
     config.twilio.accountSid,
     config.twilio.authToken
@@ -38,7 +40,7 @@ async function startServer() {
   server.register(weatherRoutes, {
     prefix: "/weather",
     calendarServiceFactory,
-    openai,
+    openaiService,
   });
   server.register(authRoutes, { prefix: "/auth" });
   server.register(smsRoutes, {

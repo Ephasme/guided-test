@@ -1,4 +1,4 @@
-import OpenAI from "openai";
+import { OpenAIService } from "../services/openaiService";
 import {
   CalendarAction,
   CalendarActionSchema,
@@ -6,26 +6,18 @@ import {
 import { buildCalendarActionPrompt } from "./buildCalendarActionPrompt";
 
 export async function extractCalendarActionFromUserInput(
-  openai: OpenAI,
+  openaiService: OpenAIService,
   userQuery: string,
   weatherInfo: string
 ): Promise<CalendarAction | undefined> {
-  const prompt = buildCalendarActionPrompt(userQuery, weatherInfo);
-
-  const response = await openai.chat.completions.create({
-    model: "gpt-3.5-turbo-0125",
-    temperature: 0,
-    messages: [{ role: "user", content: prompt }],
-  });
-
-  const raw = response.choices[0]?.message?.content || "";
-
   try {
-    if (raw.trim() === "null") return undefined;
-    const parsed = JSON.parse(raw);
-    return CalendarActionSchema.parse(parsed);
-  } catch {
-    console.error("Failed to parse calendar action:", raw);
+    const result = await openaiService.runPromptWithJsonParsingOrNull(
+      CalendarActionSchema,
+      () => buildCalendarActionPrompt(userQuery, weatherInfo)
+    );
+    return result ?? undefined;
+  } catch (error) {
+    console.error("Failed to extract calendar action:", error);
     return undefined;
   }
 }

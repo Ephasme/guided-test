@@ -3,7 +3,6 @@ import {
   WeatherResponseSchema,
   WeatherResponse,
 } from "@guided/shared";
-import OpenAI from "openai";
 import { extractWeatherQueryFromUserInput } from "../utils/extractWeatherQuery";
 import { extractCalendarActionFromUserInput } from "../utils/extractCalendarAction";
 import {
@@ -16,14 +15,9 @@ import { humanizeWeatherInfo } from "../services/humanizeWeatherInfo";
 import { TokenService } from "../services/tokenService";
 import { CalendarResult } from "../types/CalendarResult";
 import { WeatherRoutesPlugin } from "../types/WeatherRoutes";
-import { config } from "../config";
-
-const openai = new OpenAI({
-  apiKey: config.openai.apiKey,
-});
 
 const weatherRoutes: WeatherRoutesPlugin = async (fastify, options) => {
-  const { calendarServiceFactory } = options;
+  const { calendarServiceFactory, openaiService } = options;
 
   fastify.get("/", async (request, reply): Promise<WeatherResponse> => {
     const result = WeatherQuerySchema.safeParse(request.query);
@@ -38,7 +32,7 @@ const weatherRoutes: WeatherRoutesPlugin = async (fastify, options) => {
     const today = getTodayForTimezone(timezone);
 
     const weatherApiQuery = await extractWeatherQueryFromUserInput(
-      openai,
+      openaiService,
       query,
       today,
       locationName
@@ -48,7 +42,7 @@ const weatherRoutes: WeatherRoutesPlugin = async (fastify, options) => {
 
     const weatherSummary = weatherData.current?.condition?.text || "";
     const calendarAction = await extractCalendarActionFromUserInput(
-      openai,
+      openaiService,
       query,
       weatherSummary
     );
@@ -71,7 +65,7 @@ const weatherRoutes: WeatherRoutesPlugin = async (fastify, options) => {
     }
 
     const weatherResponse = await humanizeWeatherInfo(
-      openai,
+      openaiService,
       weatherData,
       query,
       calendarResult

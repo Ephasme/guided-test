@@ -1,9 +1,13 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NotificationService } from "../../services/notificationService";
 import { TokenService } from "../../services/tokenService";
 import OpenAI from "openai";
 import { DateTime } from "luxon";
+import { UserStore } from "../../services/userStore";
+import { NotificationStore } from "../../services/notificationStore";
+import { TwilioService } from "../../services/twilioService";
+import { CalendarServiceFactory } from "../../services/calendarServiceFactory";
+import { CalendarService } from "../../services/calendarService";
 
 vi.mock("../../services/twilioService", () => ({
   TwilioService: vi.fn().mockImplementation(() => ({
@@ -43,31 +47,32 @@ vi.mock("../../services/tokenService", () => ({
 }));
 
 describe("NotificationService", () => {
-  let mockUserStore: any;
-  let mockNotificationStore: any;
-  let mockTwilioService: any;
-  let mockCalendarServiceFactory: any;
-  let mockOpenAI: any;
+  let mockUserStore: UserStore;
+  let mockNotificationStore: NotificationStore;
+  let mockTwilioService: TwilioService;
+  let mockCalendarServiceFactory: CalendarServiceFactory;
+  let mockOpenAI: OpenAI;
   let notificationService: NotificationService;
 
   beforeEach(() => {
     mockUserStore = {
       findUsersWithSMS: vi.fn(),
       getUser: vi.fn(),
-    };
+    } as unknown as UserStore;
 
     mockNotificationStore = {
       hasNotificationBeenSent: vi.fn(),
       markAsSent: vi.fn(),
-    };
+      shouldSendNotification: vi.fn(),
+    } as unknown as NotificationStore;
 
     mockTwilioService = {
       sendMessage: vi.fn(),
-    };
+    } as unknown as TwilioService;
 
     mockCalendarServiceFactory = {
       create: vi.fn(),
-    };
+    } as unknown as CalendarServiceFactory;
 
     mockOpenAI = {} as OpenAI;
 
@@ -85,7 +90,7 @@ describe("NotificationService", () => {
       {
         sessionId: "test-session",
         smsPhoneNumber: "+1234567890",
-        notificationPreferences: { enabled: true },
+        notificationPreferences: { enabled: true, advanceNoticeMinutes: 60 },
       },
     ];
 
@@ -102,7 +107,7 @@ describe("NotificationService", () => {
       {
         sessionId: "test-session",
         smsPhoneNumber: undefined,
-        notificationPreferences: { enabled: true },
+        notificationPreferences: { enabled: true, advanceNoticeMinutes: 60 },
       },
     ];
 
@@ -125,16 +130,16 @@ describe("NotificationService", () => {
         sessionId: "test-session",
         smsPhoneNumber: "+1234567890",
       }),
-    } as any;
+    } as unknown as UserStore;
 
     const mockNotificationStore = {
       shouldSendNotification: vi.fn(),
       markAsSent: vi.fn(),
-    } as any;
+    } as unknown as NotificationStore;
 
     const mockTwilioService = {
       sendMessage: vi.fn(),
-    } as any;
+    } as unknown as TwilioService;
 
     const mockCalendarService = {
       executeCalendarAction: vi.fn().mockResolvedValue({
@@ -149,11 +154,11 @@ describe("NotificationService", () => {
           },
         ],
       }),
-    } as any;
+    } as unknown as CalendarService;
 
     const mockCalendarServiceFactory = {
       create: vi.fn().mockReturnValue(mockCalendarService),
-    } as any;
+    } as unknown as CalendarServiceFactory;
 
     const mockOpenai = {
       chat: {
@@ -163,7 +168,7 @@ describe("NotificationService", () => {
           }),
         },
       },
-    } as any;
+    } as unknown as OpenAI;
 
     const notificationService = new NotificationService(
       mockUserStore,
@@ -179,7 +184,9 @@ describe("NotificationService", () => {
       expires_in: 3600,
     });
 
-    mockNotificationStore.shouldSendNotification.mockResolvedValue(true);
+    vi.mocked(mockNotificationStore.shouldSendNotification).mockResolvedValue(
+      true
+    );
 
     const { getWeatherForNotification } = await import(
       "../../services/notificationWeatherService"
@@ -211,16 +218,16 @@ describe("NotificationService", () => {
         smsPhoneNumber: "+1234567890",
         defaultLocation: "San Francisco, CA",
       }),
-    } as any;
+    } as unknown as UserStore;
 
     const mockNotificationStore = {
       shouldSendNotification: vi.fn(),
       markAsSent: vi.fn(),
-    } as any;
+    } as unknown as NotificationStore;
 
     const mockTwilioService = {
       sendMessage: vi.fn(),
-    } as any;
+    } as unknown as TwilioService;
 
     const mockCalendarService = {
       executeCalendarAction: vi.fn().mockResolvedValue({
@@ -235,11 +242,11 @@ describe("NotificationService", () => {
           },
         ],
       }),
-    } as any;
+    } as unknown as CalendarService;
 
     const mockCalendarServiceFactory = {
       create: vi.fn().mockReturnValue(mockCalendarService),
-    } as any;
+    } as unknown as CalendarServiceFactory;
 
     const mockOpenai = {
       chat: {
@@ -249,7 +256,7 @@ describe("NotificationService", () => {
           }),
         },
       },
-    } as any;
+    } as unknown as OpenAI;
 
     const notificationService = new NotificationService(
       mockUserStore,
@@ -265,7 +272,9 @@ describe("NotificationService", () => {
       expires_in: 3600,
     });
 
-    mockNotificationStore.shouldSendNotification.mockResolvedValue(true);
+    vi.mocked(mockNotificationStore.shouldSendNotification).mockResolvedValue(
+      true
+    );
 
     const { getWeatherForNotification } = await import(
       "../../services/notificationWeatherService"

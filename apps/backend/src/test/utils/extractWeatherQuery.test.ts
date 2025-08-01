@@ -1,7 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { extractWeatherQueryFromUserInput } from "../../utils/extractWeatherQuery";
 import { WeatherAPIQuery } from "../../types/WeatherAPIQuerySchema";
+import { OpenAIService } from "../../services/openaiService";
+import OpenAI from "openai";
 
 vi.mock("../../utils/buildWeatherQueryPrompt", () => ({
   buildWeatherQueryPrompt: vi.fn(() => "Mock prompt"),
@@ -15,6 +16,8 @@ describe("extractWeatherQueryFromUserInput", () => {
       },
     },
   };
+
+  const mockOpenAIService = new OpenAIService(mockOpenAI as unknown as OpenAI);
 
   const mockWeatherQuery: WeatherAPIQuery = {
     q: "London",
@@ -40,11 +43,11 @@ describe("extractWeatherQueryFromUserInput", () => {
     };
 
     vi.mocked(mockOpenAI.chat.completions.create).mockResolvedValue(
-      mockResponse as any
+      mockResponse as unknown as OpenAI.Chat.Completions.ChatCompletion
     );
 
     const result = await extractWeatherQueryFromUserInput(
-      mockOpenAI as any,
+      mockOpenAIService,
       "What is the weather in London?",
       "2024-01-01",
       "London, United Kingdom"
@@ -70,17 +73,17 @@ describe("extractWeatherQueryFromUserInput", () => {
     };
 
     vi.mocked(mockOpenAI.chat.completions.create).mockResolvedValue(
-      mockResponse as any
+      mockResponse as unknown as OpenAI.Chat.Completions.ChatCompletion
     );
 
     await expect(
       extractWeatherQueryFromUserInput(
-        mockOpenAI as any,
+        mockOpenAIService,
         "What is the weather?",
         "2024-01-01",
         "London, United Kingdom"
       )
-    ).rejects.toThrow("Invalid WeatherAPI query generated from LLM");
+    ).rejects.toThrow("OpenAI service failed after 3 attempts");
   });
 
   it("should handle empty response content", async () => {
@@ -95,80 +98,84 @@ describe("extractWeatherQueryFromUserInput", () => {
     };
 
     vi.mocked(mockOpenAI.chat.completions.create).mockResolvedValue(
-      mockResponse as any
+      mockResponse as unknown as OpenAI.Chat.Completions.ChatCompletion
     );
 
     await expect(
       extractWeatherQueryFromUserInput(
-        mockOpenAI as any,
+        mockOpenAIService,
         "What is the weather?",
         "2024-01-01",
         "London, United Kingdom"
       )
-    ).rejects.toThrow("Invalid WeatherAPI query generated from LLM");
+    ).rejects.toThrow("OpenAI service failed after 3 attempts");
   });
 
-  it("should handle missing choices in response", async () => {
+  it("should handle missing choices", async () => {
     const mockResponse = {
       choices: [],
     };
 
     vi.mocked(mockOpenAI.chat.completions.create).mockResolvedValue(
-      mockResponse as any
+      mockResponse as unknown as OpenAI.Chat.Completions.ChatCompletion
     );
 
     await expect(
       extractWeatherQueryFromUserInput(
-        mockOpenAI as any,
+        mockOpenAIService,
         "What is the weather?",
         "2024-01-01",
         "London, United Kingdom"
       )
-    ).rejects.toThrow("Invalid WeatherAPI query generated from LLM");
+    ).rejects.toThrow("OpenAI service failed after 3 attempts");
   });
 
-  it("should handle schema validation failure", async () => {
-    const invalidQuery = {
-      q: "London",
-      days: "invalid",
+  it("should handle missing message content", async () => {
+    const mockResponse = {
+      choices: [
+        {
+          message: {},
+        },
+      ],
     };
 
+    vi.mocked(mockOpenAI.chat.completions.create).mockResolvedValue(
+      mockResponse as unknown as OpenAI.Chat.Completions.ChatCompletion
+    );
+
+    await expect(
+      extractWeatherQueryFromUserInput(
+        mockOpenAIService,
+        "What is the weather?",
+        "2024-01-01",
+        "London, United Kingdom"
+      )
+    ).rejects.toThrow("OpenAI service failed after 3 attempts");
+  });
+
+  it("should handle malformed JSON", async () => {
     const mockResponse = {
       choices: [
         {
           message: {
-            content: JSON.stringify(invalidQuery),
+            content:
+              '{"q": "London", "days": 3, "alerts": "yes", "aqi": "yes", "lang": "en"',
           },
         },
       ],
     };
 
     vi.mocked(mockOpenAI.chat.completions.create).mockResolvedValue(
-      mockResponse as any
+      mockResponse as unknown as OpenAI.Chat.Completions.ChatCompletion
     );
 
     await expect(
       extractWeatherQueryFromUserInput(
-        mockOpenAI as any,
+        mockOpenAIService,
         "What is the weather?",
         "2024-01-01",
         "London, United Kingdom"
       )
-    ).rejects.toThrow("Invalid WeatherAPI query generated from LLM");
-  });
-
-  it("should handle OpenAI API errors", async () => {
-    vi.mocked(mockOpenAI.chat.completions.create).mockRejectedValue(
-      new Error("OpenAI API error")
-    );
-
-    await expect(
-      extractWeatherQueryFromUserInput(
-        mockOpenAI as any,
-        "What is the weather?",
-        "2024-01-01",
-        "London, United Kingdom"
-      )
-    ).rejects.toThrow("OpenAI API error");
+    ).rejects.toThrow("OpenAI service failed after 3 attempts");
   });
 });

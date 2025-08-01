@@ -1,44 +1,29 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { FastifyInstance } from "fastify";
 import weatherRoutes from "../../routes/weather";
-import { WeatherResponse } from "@guided/shared";
 import { CalendarServiceFactory } from "../../services/calendarServiceFactory";
+import { OpenAIService } from "../../services/openaiService";
+import { WeatherResponse } from "@guided/shared";
+import { CalendarService } from "../../services/calendarService";
 import OpenAI from "openai";
 
-vi.mock("env-var", () => ({
-  default: {
-    get: vi.fn((key: string) => ({
-      required: () => ({
-        asString: () => {
-          if (key === "OPENAI_API_KEY") return "test-openai-key";
-          return "test-value";
-        },
-      }),
-      default: (value: any) => ({
-        asString: () => {
-          if (key === "OPENAI_API_KEY") return "test-openai-key";
-          return value || "test-value";
-        },
-        asPortNumber: () => {
-          if (key === "PORT") return 3000;
-          return 3000;
-        },
-        asIntPositive: () => {
-          if (key === "NOTIFICATION_INTERVAL_MS") return 900000;
-          return 900000;
-        },
-      }),
-    })),
+vi.mock("../../config", () => ({
+  config: {
+    openai: {
+      apiKey: "test-api-key",
+    },
   },
 }));
 
-vi.mock("../../utils/extractWeatherQuery", () => ({
-  extractWeatherQueryFromUserInput: vi.fn(),
+vi.mock("../../utils/extractClientIp", () => ({
+  extractClientIp: vi.fn(() => "127.0.0.1"),
 }));
 
-vi.mock("../../utils/extractCalendarAction", () => ({
-  extractCalendarActionFromUserInput: vi.fn(),
+vi.mock("../../services/openaiService", () => ({
+  OpenAIService: vi.fn().mockImplementation(() => ({
+    runPromptWithJsonParsingOrThrow: vi.fn(),
+    runPromptWithJsonParsingOrNull: vi.fn(),
+  })),
 }));
 
 vi.mock("../../utils/resolveUserLocation", () => ({
@@ -67,19 +52,20 @@ vi.mock("../../services/tokenService", () => ({
 describe("Weather Routes", () => {
   let app: FastifyInstance;
   let mockCalendarServiceFactory: CalendarServiceFactory;
-  let mockOpenAI: OpenAI;
+  let mockOpenAIService: OpenAIService;
 
   beforeEach(async () => {
     mockCalendarServiceFactory = {
       create: vi.fn(),
     };
 
-    mockOpenAI = {} as OpenAI;
+    const { OpenAIService } = await import("../../services/openaiService");
+    mockOpenAIService = new OpenAIService({} as unknown as OpenAI);
 
     app = await import("fastify").then(({ default: fastify }) => fastify());
     await app.register(weatherRoutes, {
       calendarServiceFactory: mockCalendarServiceFactory,
-      openai: mockOpenAI,
+      openaiService: mockOpenAIService,
     });
 
     vi.clearAllMocks();
@@ -128,13 +114,13 @@ describe("Weather Routes", () => {
         pressure_in: 29.91,
         precip_mm: 0.0,
         precip_in: 0.0,
-        humidity: 65,
-        cloud: 25,
+        humidity: 75,
+        cloud: 50,
         feelslike_c: 14.0,
         feelslike_f: 57.2,
         vis_km: 10.0,
         vis_miles: 6.0,
-        uv: 3.0,
+        uv: 2.0,
         gust_mph: 15.0,
         gust_kph: 24.1,
       },
@@ -142,13 +128,6 @@ describe("Weather Routes", () => {
 
     const mockHumanizedResponse =
       "The weather in London is partly cloudy with a temperature of 15°C.";
-
-    const { extractWeatherQueryFromUserInput } = await import(
-      "../../utils/extractWeatherQuery"
-    );
-    vi.mocked(extractWeatherQueryFromUserInput).mockResolvedValue(
-      mockWeatherQuery
-    );
 
     const { resolveUserLocation, getTodayForTimezone } = await import(
       "../../utils/resolveUserLocation"
@@ -165,15 +144,17 @@ describe("Weather Routes", () => {
     );
     vi.mocked(fetchWeatherData).mockResolvedValue(mockWeatherData);
 
-    const { extractCalendarActionFromUserInput } = await import(
-      "../../utils/extractCalendarAction"
-    );
-    vi.mocked(extractCalendarActionFromUserInput).mockResolvedValue(undefined);
-
     const { humanizeWeatherInfo } = await import(
       "../../services/humanizeWeatherInfo"
     );
     vi.mocked(humanizeWeatherInfo).mockResolvedValue(mockHumanizedResponse);
+
+    vi.mocked(
+      mockOpenAIService.runPromptWithJsonParsingOrThrow
+    ).mockResolvedValue(mockWeatherQuery);
+    vi.mocked(
+      mockOpenAIService.runPromptWithJsonParsingOrNull
+    ).mockResolvedValue(null);
 
     const response = await app.inject({
       method: "GET",
@@ -210,12 +191,9 @@ describe("Weather Routes", () => {
     });
     vi.mocked(getTodayForTimezone).mockReturnValue("2024-01-01");
 
-    const { extractWeatherQueryFromUserInput } = await import(
-      "../../utils/extractWeatherQuery"
-    );
-    vi.mocked(extractWeatherQueryFromUserInput).mockRejectedValue(
-      new Error("OpenAI API error")
-    );
+    vi.mocked(
+      mockOpenAIService.runPromptWithJsonParsingOrThrow
+    ).mockRejectedValue(new Error("OpenAI API error"));
 
     const response = await app.inject({
       method: "GET",
@@ -234,12 +212,9 @@ describe("Weather Routes", () => {
       lang: "en",
     };
 
-    const { extractWeatherQueryFromUserInput } = await import(
-      "../../utils/extractWeatherQuery"
-    );
-    vi.mocked(extractWeatherQueryFromUserInput).mockResolvedValue(
-      mockWeatherQuery
-    );
+    vi.mocked(
+      mockOpenAIService.runPromptWithJsonParsingOrThrow
+    ).mockResolvedValue(mockWeatherQuery);
 
     const { resolveUserLocation, getTodayForTimezone } = await import(
       "../../utils/resolveUserLocation"
@@ -317,27 +292,27 @@ describe("Weather Routes", () => {
       },
     };
 
+    const mockHumanizedResponse =
+      "The weather in London is sunny with a temperature of 15°C.";
+
     const mockCalendarAction = {
       action: "create" as const,
       event: {
-        summary: "Outdoor meeting",
-        start: { dateTime: "2024-01-02T10:00:00Z", timeZone: "Europe/London" },
-        end: { dateTime: "2024-01-02T11:00:00Z", timeZone: "Europe/London" },
+        summary: "Meeting with John",
+        start: {
+          dateTime: "2024-01-01T14:00:00Z",
+          timeZone: "Europe/London",
+        },
+        end: {
+          dateTime: "2024-01-01T15:00:00Z",
+          timeZone: "Europe/London",
+        },
       },
     };
 
     const mockCalendarResult = {
-      success: true,
-      action: "create",
       message: "Event created successfully",
     };
-
-    const { extractWeatherQueryFromUserInput } = await import(
-      "../../utils/extractWeatherQuery"
-    );
-    vi.mocked(extractWeatherQueryFromUserInput).mockResolvedValue(
-      mockWeatherQuery
-    );
 
     const { resolveUserLocation, getTodayForTimezone } = await import(
       "../../utils/resolveUserLocation"
@@ -354,46 +329,45 @@ describe("Weather Routes", () => {
     );
     vi.mocked(fetchWeatherData).mockResolvedValue(mockWeatherData);
 
-    const { extractCalendarActionFromUserInput } = await import(
-      "../../utils/extractCalendarAction"
-    );
-    vi.mocked(extractCalendarActionFromUserInput).mockResolvedValue(
-      mockCalendarAction
-    );
-
     const { humanizeWeatherInfo } = await import(
       "../../services/humanizeWeatherInfo"
     );
-    vi.mocked(humanizeWeatherInfo).mockResolvedValue("Weather response");
+    vi.mocked(humanizeWeatherInfo).mockResolvedValue(mockHumanizedResponse);
 
     const { TokenService } = await import("../../services/tokenService");
     vi.mocked(TokenService.getTokens).mockReturnValue({
-      access_token: "test-token",
+      access_token: "test-access-token",
       refresh_token: "test-refresh-token",
       expires_in: 3600,
     });
 
     const mockCalendarService = {
       executeCalendarAction: vi.fn().mockResolvedValue(mockCalendarResult),
-      oauth2Client: {},
-      createEvent: vi.fn(),
-      findEvents: vi.fn(),
-      getEvent: vi.fn(),
-    } as any;
+    };
 
     vi.mocked(mockCalendarServiceFactory.create).mockReturnValue(
-      mockCalendarService
+      mockCalendarService as unknown as CalendarService
     );
+
+    vi.mocked(
+      mockOpenAIService.runPromptWithJsonParsingOrThrow
+    ).mockResolvedValue(mockWeatherQuery);
+    vi.mocked(
+      mockOpenAIService.runPromptWithJsonParsingOrNull
+    ).mockResolvedValue(mockCalendarAction);
 
     const response = await app.inject({
       method: "GET",
-      url: "/?query=Schedule a meeting for tomorrow&sessionId=test-session",
+      url: "/?query=What is the weather?&sessionId=test-session",
     });
 
     expect(response.statusCode).toBe(200);
     const data = JSON.parse(response.payload) as WeatherResponse;
+    expect(data.location).toBe("London");
+    expect(data.forecast).toBe(mockHumanizedResponse);
+    expect(data.query).toBe("What is the weather?");
     expect(data.calendarResult).toEqual({
-      message: "Event created successfully",
+      message: mockCalendarResult.message,
     });
   });
 
@@ -448,21 +422,23 @@ describe("Weather Routes", () => {
       },
     };
 
+    const mockHumanizedResponse =
+      "The weather in London is sunny with a temperature of 15°C.";
+
     const mockCalendarAction = {
       action: "create" as const,
       event: {
-        summary: "Outdoor meeting",
-        start: { dateTime: "2024-01-02T10:00:00Z", timeZone: "Europe/London" },
-        end: { dateTime: "2024-01-02T11:00:00Z", timeZone: "Europe/London" },
+        summary: "Meeting with John",
+        start: {
+          dateTime: "2024-01-01T14:00:00Z",
+          timeZone: "Europe/London",
+        },
+        end: {
+          dateTime: "2024-01-01T15:00:00Z",
+          timeZone: "Europe/London",
+        },
       },
     };
-
-    const { extractWeatherQueryFromUserInput } = await import(
-      "../../utils/extractWeatherQuery"
-    );
-    vi.mocked(extractWeatherQueryFromUserInput).mockResolvedValue(
-      mockWeatherQuery
-    );
 
     const { resolveUserLocation, getTodayForTimezone } = await import(
       "../../utils/resolveUserLocation"
@@ -479,21 +455,14 @@ describe("Weather Routes", () => {
     );
     vi.mocked(fetchWeatherData).mockResolvedValue(mockWeatherData);
 
-    const { extractCalendarActionFromUserInput } = await import(
-      "../../utils/extractCalendarAction"
-    );
-    vi.mocked(extractCalendarActionFromUserInput).mockResolvedValue(
-      mockCalendarAction
-    );
-
     const { humanizeWeatherInfo } = await import(
       "../../services/humanizeWeatherInfo"
     );
-    vi.mocked(humanizeWeatherInfo).mockResolvedValue("Weather response");
+    vi.mocked(humanizeWeatherInfo).mockResolvedValue(mockHumanizedResponse);
 
     const { TokenService } = await import("../../services/tokenService");
     vi.mocked(TokenService.getTokens).mockReturnValue({
-      access_token: "test-token",
+      access_token: "test-access-token",
       refresh_token: "test-refresh-token",
       expires_in: 3600,
     });
@@ -502,23 +471,29 @@ describe("Weather Routes", () => {
       executeCalendarAction: vi
         .fn()
         .mockRejectedValue(new Error("Calendar error")),
-      oauth2Client: {},
-      createEvent: vi.fn(),
-      findEvents: vi.fn(),
-      getEvent: vi.fn(),
-    } as any;
+    };
 
     vi.mocked(mockCalendarServiceFactory.create).mockReturnValue(
-      mockCalendarService
+      mockCalendarService as unknown as CalendarService
     );
+
+    vi.mocked(
+      mockOpenAIService.runPromptWithJsonParsingOrThrow
+    ).mockResolvedValue(mockWeatherQuery);
+    vi.mocked(
+      mockOpenAIService.runPromptWithJsonParsingOrNull
+    ).mockResolvedValue(mockCalendarAction);
 
     const response = await app.inject({
       method: "GET",
-      url: "/?query=Schedule a meeting&sessionId=test-session",
+      url: "/?query=What is the weather?&sessionId=test-session",
     });
 
     expect(response.statusCode).toBe(200);
     const data = JSON.parse(response.payload) as WeatherResponse;
+    expect(data.location).toBe("London");
+    expect(data.forecast).toBe(mockHumanizedResponse);
+    expect(data.query).toBe("What is the weather?");
     expect(data.calendarResult).toBeUndefined();
   });
 });

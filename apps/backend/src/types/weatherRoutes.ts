@@ -1,10 +1,10 @@
 import { FastifyPluginAsync } from "fastify";
 import { CalendarServiceFactory } from "../services/calendarServiceFactory";
-import OpenAI from "openai";
+import { OpenAIService } from "../services/openaiService";
 
 export interface WeatherRoutesOptions {
   calendarServiceFactory: CalendarServiceFactory;
-  openai: OpenAI;
+  openaiService: OpenAIService;
 }
 
 export type WeatherRoutesPlugin = FastifyPluginAsync<WeatherRoutesOptions>;
