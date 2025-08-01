@@ -3,6 +3,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import Fastify, { FastifyInstance } from "fastify";
 import weatherRoutes from "../../routes/weather";
 import { WeatherResponse } from "@guided/shared";
+import { CalendarServiceFactory } from "../../services/calendarServiceFactory";
 
 vi.mock("env-var", () => ({
   default: {
@@ -50,10 +51,27 @@ vi.mock("../../services/tokenService", () => ({
 
 describe("Weather Routes", () => {
   let app: FastifyInstance;
+  let mockCalendarServiceFactory: CalendarServiceFactory;
 
   beforeEach(async () => {
     app = Fastify();
-    await app.register(weatherRoutes);
+
+    const mockCalendarService = {
+      executeCalendarAction: vi.fn(),
+      oauth2Client: {},
+      createEvent: vi.fn(),
+      findEvents: vi.fn(),
+      getEvent: vi.fn(),
+    } as any;
+
+    mockCalendarServiceFactory = {
+      create: vi.fn().mockReturnValue(mockCalendarService),
+    } as any;
+
+    await app.register(weatherRoutes, {
+      calendarServiceFactory: mockCalendarServiceFactory,
+    });
+
     vi.clearAllMocks();
   });
 
@@ -353,8 +371,9 @@ describe("Weather Routes", () => {
       getEvent: vi.fn(),
     } as any;
 
-    const { CalendarService } = await import("../../services/calendarService");
-    vi.mocked(CalendarService).mockImplementation(() => mockCalendarService);
+    vi.mocked(mockCalendarServiceFactory.create).mockReturnValue(
+      mockCalendarService
+    );
 
     const response = await app.inject({
       method: "GET",
@@ -479,8 +498,9 @@ describe("Weather Routes", () => {
       getEvent: vi.fn(),
     } as any;
 
-    const { CalendarService } = await import("../../services/calendarService");
-    vi.mocked(CalendarService).mockImplementation(() => mockCalendarService);
+    vi.mocked(mockCalendarServiceFactory.create).mockReturnValue(
+      mockCalendarService
+    );
 
     const response = await app.inject({
       method: "GET",

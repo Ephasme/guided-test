@@ -1,4 +1,3 @@
-import { FastifyPluginAsync } from "fastify";
 import {
   WeatherQuerySchema,
   WeatherResponseSchema,
@@ -15,9 +14,9 @@ import {
 import { extractClientIp } from "../utils/extractClientIp";
 import { fetchWeatherData } from "../services/fetchWeatherData";
 import { humanizeWeatherInfo } from "../services/humanizeWeatherInfo";
-import { CalendarService } from "../services/calendarService";
 import { TokenService } from "../services/tokenService";
 import { CalendarResult } from "../types/CalendarResult";
+import { WeatherRoutesPlugin } from "../types/weatherRoutes";
 
 const OPENAI_API_KEY = env.get("OPENAI_API_KEY").required().asString();
 
@@ -25,7 +24,9 @@ const openai = new OpenAI({
   apiKey: OPENAI_API_KEY,
 });
 
-const weatherRoutes: FastifyPluginAsync = async (fastify) => {
+const weatherRoutes: WeatherRoutesPlugin = async (fastify, options) => {
+  const { calendarServiceFactory } = options;
+
   fastify.get("/", async (request, reply): Promise<WeatherResponse> => {
     const result = WeatherQuerySchema.safeParse(request.query);
     if (!result.success) {
@@ -63,7 +64,9 @@ const weatherRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const tokens = TokenService.getTokens(sessionId);
         if (tokens) {
-          const calendarService = new CalendarService(tokens.access_token);
+          const calendarService = calendarServiceFactory.create(
+            tokens.access_token
+          );
           calendarResult = await calendarService.executeCalendarAction(
             calendarAction
           );

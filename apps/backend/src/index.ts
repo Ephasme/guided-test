@@ -2,16 +2,21 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import weatherRoutes from "./routes/weather";
 import authRoutes from "./routes/auth";
+import { CalendarServiceFactory } from "./services/calendarServiceFactory";
 
 async function startServer() {
   const server = Fastify();
+  const calendarServiceFactory = new CalendarServiceFactory();
 
   await server.register(cors, {
     origin: true,
     credentials: true,
   });
 
-  server.register(weatherRoutes, { prefix: "/weather" });
+  server.register(weatherRoutes, {
+    prefix: "/weather",
+    calendarServiceFactory,
+  });
   server.register(authRoutes, { prefix: "/auth" });
 
   server.listen({ port: 3000 }, (err) => {
