@@ -15,6 +15,13 @@
     },
     "lint": {},
     "test": {},
+    "test:watch": {
+      "cache": false,
+      "persistent": true
+    },
+    "test:coverage": {
+      "outputs": ["coverage/**"]
+    },
     "clean": {}
   }
 }

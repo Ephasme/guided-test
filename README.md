@@ -19,39 +19,39 @@ This is a monorepo built with:
 - **Shared**: Common types and schemas
 - **Build Tool**: Turbo for monorepo management
 
-## 📦 Installation
+## 📦 Installation & Setup
 
-1. **Clone the repository**
+### Prerequisites
 
-   ```bash
-   git clone <repository-url>
-   cd guided-test
-   ```
+- **Node.js**: Version 18 or higher
+- **pnpm**: Version 8.15.0 or higher (recommended package manager)
 
-2. **Install dependencies**
+### 1. Clone and Install
 
-   ```bash
-   pnpm install
-   ```
+```bash
+# Clone the repository
+git clone git@github.com:Ephasme/guided-test.git
+cd guided-test
 
-3. **Set up environment variables**
+# Install dependencies
+pnpm install
+```
 
-   ```bash
-   # Backend
-   cp apps/backend/env.example apps/backend/.env
-   # Edit apps/backend/.env with your API keys
-   ```
+### 2. Environment Configuration
 
-4. **Start development servers**
-   ```bash
-   pnpm dev
-   ```
+```bash
+# Backend: Copy the environment example file
+cp apps/backend/.env.example apps/backend/.env
 
-## 🔧 Configuration
+# Frontend: Copy the environment example file
+cp apps/frontend/.env.example apps/frontend/.env
 
-### Required Environment Variables
+# Edit both .env files with your API keys
+```
 
-#### Backend (apps/backend/.env)
+#### Backend Environment Variables
+
+Edit `apps/backend/.env` with your actual API keys:
 
 ```env
 # Weather API
@@ -67,9 +67,44 @@ GOOGLE_CLIENT_SECRET=your_google_client_secret
 
 # Security
 ENCRYPTION_KEY=your-32-character-encryption-key
+
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+
+# Logging
+LOG_LEVEL=info
 ```
 
-## 🚀 Development
+#### Frontend Environment Variables
+
+Edit `apps/frontend/.env` with your frontend configuration:
+
+```env
+# Google OAuth Configuration
+VITE_GOOGLE_CLIENT_ID=your_google_client_id
+
+# OAuth Redirect URI (optional, defaults to http://localhost:3000/auth/callback)
+VITE_REDIRECT_URI=http://localhost:3000/auth/callback
+
+# Google API Scopes (optional, defaults to calendar.readonly)
+VITE_GOOGLE_SCOPES=https://www.googleapis.com/auth/calendar.readonly
+```
+
+### 3. Start Development Servers
+
+```bash
+# Start all services in development mode
+pnpm dev
+```
+
+This will start:
+
+- **Backend**: Fastify server on port 3000
+- **Frontend**: Vite dev server (typically on port 5173)
+- **Shared library**: Build process in watch mode
+
+## 🔧 Development
 
 ### Available Scripts
 
@@ -83,6 +118,11 @@ pnpm build        # Build all packages and applications
 # Linting
 pnpm lint         # Lint all packages and applications
 
+# Testing
+pnpm test         # Run all tests once
+pnpm test:watch   # Run tests in watch mode
+pnpm test:coverage # Run tests with coverage report
+
 # Cleaning
 pnpm clean        # Clean all build artifacts
 ```
@@ -93,7 +133,20 @@ pnpm clean        # Clean all build artifacts
 guided-test/
 ├── apps/
 │   ├── backend/          # Fastify API server
+│   │   ├── src/
+│   │   │   ├── routes/   # API endpoints
+│   │   │   ├── services/ # Business logic
+│   │   │   ├── utils/    # Helper functions
+│   │   │   └── types/    # Type definitions
+│   │   └── test/         # Comprehensive test suite
+│   │       ├── routes/   # Route integration tests
+│   │       ├── services/ # Service unit tests
+│   │       └── utils/    # Utility function tests
 │   └── frontend/         # React application
+│       ├── src/
+│       │   ├── api/      # API client
+│       │   ├── hooks/    # React hooks
+│       │   └── utils/    # Frontend utilities
 ├── packages/
 │   └── shared/           # Shared types and schemas
 └── Bruno/               # API testing collection
@@ -101,7 +154,25 @@ guided-test/
 
 ## 🧪 Testing
 
-The project includes Bruno API testing collection for backend endpoints.
+The project includes a comprehensive test suite built with Vitest.
+
+### Running Tests
+
+```bash
+# Run all tests once (non-watch mode)
+pnpm test
+
+# Run tests in watch mode
+pnpm test:watch
+
+# Run tests with coverage report
+pnpm test:coverage
+
+# Run specific test file
+pnpm test apps/backend/test/routes/weather.test.ts
+```
+
+The test suite also includes Bruno API testing collection for manual API endpoint testing.
 
 ## 📝 API Documentation
 
@@ -127,28 +198,3 @@ Query parameters:
 - OAuth state validation prevents CSRF attacks
 - Input validation using Zod schemas
 - CORS configured for frontend communication
-
-## 🚀 Deployment
-
-### Backend Deployment
-
-1. Build the application: `pnpm build`
-2. Set production environment variables
-3. Start the server: `pnpm start`
-
-### Frontend Deployment
-
-1. Build the application: `pnpm build`
-2. Deploy the `dist` folder to your hosting service
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Run tests and linting
-5. Submit a pull request
-
-## 📄 License
-
-ISC
