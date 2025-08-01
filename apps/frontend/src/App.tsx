@@ -1,18 +1,7 @@
 import { useState, useEffect } from "react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useWeatherQuery } from "./hooks/useWeatherQuery";
 import { useAuth } from "./hooks/useAuth";
 import { SMSRegistration } from "./components/SMSRegistration";
-
-// Create a client
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 1,
-      staleTime: 5 * 60 * 1000, // 5 minutes
-    },
-  },
-});
 
 function WeatherApp() {
   const [query, setQuery] = useState("");
@@ -32,9 +21,7 @@ function WeatherApp() {
     const state = urlParams.get("state");
 
     if (sessionId) {
-      // Handle session ID from backend redirect approach
       handleSessionCallback(sessionId, state || undefined);
-      // Clear the URL parameters
       window.history.replaceState({}, document.title, window.location.pathname);
     }
   }, [handleSessionCallback]);
@@ -54,7 +41,6 @@ function WeatherApp() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 py-8 px-4">
       <div className="max-w-2xl mx-auto">
-        {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-800 mb-2">
             🌤️ Weather Assistant
@@ -64,7 +50,6 @@ function WeatherApp() {
           </p>
         </div>
 
-        {/* Auth Section */}
         <div className="mb-6 p-4 bg-white rounded-lg shadow border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
@@ -97,10 +82,8 @@ function WeatherApp() {
           </div>
         </div>
 
-        {/* SMS Registration */}
         <SMSRegistration />
 
-        {/* Input Form */}
         <form onSubmit={handleSubmit} className="mb-8">
           <div className="flex gap-4">
             <input
@@ -197,12 +180,4 @@ function WeatherApp() {
   );
 }
 
-function App() {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <WeatherApp />
-    </QueryClientProvider>
-  );
-}
-
-export default App;
+export default WeatherApp;

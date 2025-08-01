@@ -1,12 +1,11 @@
 import type { WeatherResponse } from "@guided/shared";
-import { getPublicIP } from "../utils/getPublicIP";
 
 export const fetchWeather = async (
   query: string,
+  clientIP: string,
   sessionId?: string
 ): Promise<WeatherResponse> => {
   try {
-    const clientIP = await getPublicIP();
     const params = new URLSearchParams({
       query: query,
       clientIP: clientIP,

@@ -1,48 +1,29 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useAuth } from "../hooks/useAuth";
-import { getPublicIP } from "../utils/getPublicIP";
+import { useSMS } from "../hooks/useSMS";
 import {
   validatePhoneNumber,
   formatPhoneNumberForDisplay,
 } from "../utils/validatePhoneNumber";
 
-interface SMSStatus {
-  notificationsEnabled: boolean;
-  phoneNumber?: string;
-}
-
 export function SMSRegistration() {
   const { sessionId } = useAuth();
+  const {
+    status,
+    isLoadingStatus,
+    statusError,
+    registerSMSNotification,
+    unregisterSMSNotification,
+    isRegistering,
+    isUnregistering,
+    registerError,
+    unregisterError,
+  } = useSMS(sessionId);
+
   const [phoneNumber, setPhoneNumber] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [status, setStatus] = useState<SMSStatus | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const checkStatus = useCallback(async () => {
-    if (!sessionId) return;
-
-    try {
-      const response = await fetch(`http://localhost:3000/sms/status`, {
-        headers: {
-          "x-session-id": sessionId,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setStatus(data);
-        setError(null);
-      } else {
-        setError("Failed to check SMS status");
-      }
-    } catch {
-      setError("Failed to check SMS status");
-    }
-  }, [sessionId]);
-
-  const registerSMS = async () => {
+  const handleRegister = async () => {
     if (!sessionId || !phoneNumber.trim()) return;
 
     const validation = validatePhoneNumber(phoneNumber.trim());
@@ -51,76 +32,31 @@ export function SMSRegistration() {
       return;
     }
 
-    setIsLoading(true);
-    setError(null);
-    setSuccess(null);
-    setValidationError(null);
-
     try {
-      const clientIP = await getPublicIP();
-      const response = await fetch(`http://localhost:3000/sms/register`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-session-id": sessionId,
-        },
-        body: JSON.stringify({
-          phoneNumber: phoneNumber.trim(),
-          clientIP,
-        }),
-      });
-
-      if (response.ok) {
-        setSuccess("SMS number registered successfully!");
-        setPhoneNumber("");
-        await checkStatus();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Failed to register SMS number");
-      }
-    } catch {
-      setError("Failed to register SMS number");
-    } finally {
-      setIsLoading(false);
+      await registerSMSNotification(phoneNumber.trim());
+      setPhoneNumber("");
+      setValidationError(null);
+    } catch (error) {
+      console.error("Failed to register SMS:", error);
     }
   };
 
-  const unregisterSMS = async () => {
+  const handleUnregister = async () => {
     if (!sessionId) return;
 
-    setIsLoading(true);
-    setError(null);
-    setSuccess(null);
-
     try {
-      const response = await fetch(`http://localhost:3000/sms/unregister`, {
-        method: "DELETE",
-        headers: {
-          "x-session-id": sessionId,
-        },
-      });
-
-      if (response.ok) {
-        setSuccess("SMS number unregistered successfully!");
-        await checkStatus();
-      } else {
-        const errorData = await response.json();
-        setError(errorData.error || "Failed to unregister SMS number");
-      }
-    } catch {
-      setError("Failed to unregister SMS number");
-    } finally {
-      setIsLoading(false);
+      await unregisterSMSNotification();
+    } catch (error) {
+      console.error("Failed to unregister SMS:", error);
     }
   };
-
-  useEffect(() => {
-    checkStatus();
-  }, [sessionId, checkStatus]);
 
   if (!sessionId) {
     return null;
   }
+
+  const isLoading = isLoadingStatus || isRegistering || isUnregistering;
+  const error = statusError || registerError || unregisterError;
 
   return (
     <div className="mb-6 p-4 bg-white rounded-lg shadow border border-gray-200">
@@ -147,11 +83,11 @@ export function SMSRegistration() {
               </p>
             </div>
             <button
-              onClick={unregisterSMS}
+              onClick={handleUnregister}
               disabled={isLoading}
               className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isLoading ? "Disabling..." : "Disable"}
+              {isUnregistering ? "Disabling..." : "Disable"}
             </button>
           </div>
         </div>
@@ -177,11 +113,11 @@ export function SMSRegistration() {
               disabled={isLoading}
             />
             <button
-              onClick={registerSMS}
+              onClick={handleRegister}
               disabled={isLoading || !phoneNumber.trim() || !!validationError}
               className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              {isLoading ? "Enabling..." : "Enable"}
+              {isRegistering ? "Enabling..." : "Enable"}
             </button>
           </div>
           <p className="text-xs text-gray-500">
@@ -196,13 +132,9 @@ export function SMSRegistration() {
 
       {error && (
         <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-sm text-red-800">{error}</p>
-        </div>
-      )}
-
-      {success && (
-        <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg">
-          <p className="text-sm text-green-800">{success}</p>
+          <p className="text-sm text-red-800">
+            {error instanceof Error ? error.message : "An error occurred"}
+          </p>
         </div>
       )}
     </div>
