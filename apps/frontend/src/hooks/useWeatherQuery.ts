@@ -6,7 +6,7 @@ export const useWeatherQuery = (query: string | null, sessionId?: string) => {
     queryKey: ["weather", query, sessionId],
     queryFn: () => fetchWeather(query!, sessionId),
     enabled: !!query,
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     retry: 1,
   });
 };

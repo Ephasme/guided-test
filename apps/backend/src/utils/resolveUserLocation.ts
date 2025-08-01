@@ -1,4 +1,3 @@
-// packages/shared/src/utils/resolveUserLocation.ts
 import { DateTime } from "luxon";
 import { z } from "zod";
 import {

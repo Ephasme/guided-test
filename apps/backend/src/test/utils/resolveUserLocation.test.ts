@@ -13,7 +13,7 @@ vi.mock("env-var", () => ({
           return "test-value";
         },
       }),
-      default: (value: any) => ({
+      default: (value: string) => ({
         asString: () => {
           if (key === "IPAPI_API_KEY") return "test-ipapi-key";
           return value || "test-value";

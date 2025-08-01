@@ -1,6 +1,4 @@
 import { z } from "zod";
-
-// WeatherAPI Query Schema
 export const WeatherAPIQuerySchema = z.object({
   q: z.string().min(1, "Missing location (q)"),
   days: z.number().int().min(1).max(14),

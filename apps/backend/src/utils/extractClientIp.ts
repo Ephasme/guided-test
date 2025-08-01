@@ -2,7 +2,6 @@ import { FastifyRequest } from "fastify";
 import { z } from "zod";
 import { AppError, ValidationError, NotFoundError } from "./errors";
 
-// Combined IP schema for both IPv4 and IPv6
 const ipSchema = z.union([z.ipv4(), z.ipv6()]);
 
 function isValidIP(ip: string): boolean {
@@ -24,9 +23,8 @@ export function extractClientIp(request: FastifyRequest): string {
   try {
     const forwardedFor = request.headers["x-forwarded-for"];
     const realIP = request.headers["x-real-ip"];
-    const cfConnectingIP = request.headers["cf-connecting-ip"]; // Cloudflare
+    const cfConnectingIP = request.headers["cf-connecting-ip"];
 
-    // Try different IP sources in order of preference
     const ipSources = [cfConnectingIP, realIP, forwardedFor, request.ip].filter(
       Boolean
     );
@@ -35,7 +33,6 @@ export function extractClientIp(request: FastifyRequest): string {
       throw new NotFoundError("No IP address headers found in request");
     }
 
-    // Try to find a valid IP from all sources
     for (const ipSource of ipSources) {
       if (Array.isArray(ipSource)) {
         const validIP = extractFirstValidIP(ipSource);

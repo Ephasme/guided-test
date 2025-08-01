@@ -31,7 +31,6 @@ export async function fetchWeatherData(
 
   const rawData = await res.json();
 
-  // Validate the response with Zod schema
   const validationResult = WeatherAPIResponseSchema.safeParse(rawData);
   if (!validationResult.success) {
     console.error(

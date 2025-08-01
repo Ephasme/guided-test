@@ -34,7 +34,7 @@ export const fetchWeather = async (
           errorMessage = errorData.error;
         }
       } catch {
-        // If we can't parse the error response, use the default message
+        // Ignore parsing errors and use default message
       }
 
       throw new Error(errorMessage);

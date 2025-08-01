@@ -42,21 +42,15 @@ const smsRoutes: SMSRoutesPlugin = async (fastify, options) => {
         user = await userStore.createUser(sessionId);
       }
 
-      // Resolve user's location based on their IP
       let resolvedLocation: string | undefined;
       let timezone: string | undefined;
 
       try {
-        console.log(`Resolving location for IP: ${clientIP}`);
         const locationData = await resolveUserLocation(clientIP);
         resolvedLocation = `${locationData.city}, ${locationData.countryName}`;
         timezone = locationData.timezone;
-        console.log(
-          `Resolved location: ${resolvedLocation}, timezone: ${timezone}`
-        );
       } catch (locationError) {
         console.error("Failed to resolve user location:", locationError);
-        // Continue without location resolution - user can still register
       }
 
       await userStore.updateUser(sessionId, {

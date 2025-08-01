@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "../hooks/useAuth";
 import { getPublicIP } from "../utils/getPublicIP";
 import {
@@ -20,7 +20,7 @@ export function SMSRegistration() {
   const [success, setSuccess] = useState<string | null>(null);
   const [validationError, setValidationError] = useState<string | null>(null);
 
-  const checkStatus = async () => {
+  const checkStatus = useCallback(async () => {
     if (!sessionId) return;
 
     try {
@@ -40,7 +40,7 @@ export function SMSRegistration() {
     } catch {
       setError("Failed to check SMS status");
     }
-  };
+  }, [sessionId]);
 
   const registerSMS = async () => {
     if (!sessionId || !phoneNumber.trim()) return;
@@ -116,7 +116,7 @@ export function SMSRegistration() {
 
   useEffect(() => {
     checkStatus();
-  }, [sessionId]);
+  }, [sessionId, checkStatus]);
 
   if (!sessionId) {
     return null;

@@ -1,6 +1,4 @@
 import { z } from "zod";
-
-// Zod schema for WeatherAPI response
 export const WeatherAPIResponseSchema = z.object({
   location: z.object({
     name: z.string(),
@@ -160,5 +158,4 @@ export const WeatherAPIResponseSchema = z.object({
     .optional(),
 });
 
-// Type export for the Zod schema - this is the single source of truth
 export type WeatherAPIResponse = z.infer<typeof WeatherAPIResponseSchema>;

@@ -11,13 +11,9 @@ export class NotificationScheduler {
 
   start(): void {
     if (this.isRunning) {
-      console.log("Notification scheduler is already running");
       return;
     }
 
-    console.log(
-      `Starting notification scheduler with ${this.intervalMs}ms intervals`
-    );
     this.isRunning = true;
 
     this.intervalId = setInterval(async () => {
@@ -33,14 +29,11 @@ export class NotificationScheduler {
       this.intervalId = undefined;
     }
     this.isRunning = false;
-    console.log("Notification scheduler stopped");
   }
 
   private async runNotificationCheck(): Promise<void> {
     try {
-      console.log("Running notification check...");
       await this.notificationService.processNotifications();
-      console.log("Notification check completed");
     } catch (error) {
       console.error("Notification check failed:", error);
     }

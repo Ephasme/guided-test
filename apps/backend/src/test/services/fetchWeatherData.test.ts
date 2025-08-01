@@ -13,7 +13,7 @@ vi.mock("env-var", () => ({
           return "test-value";
         },
       }),
-      default: (value: any) => ({
+      default: (value: string) => ({
         asString: () => {
           if (key === "WEATHER_API_URL")
             return "https://api.weatherapi.com/v1/current.json";

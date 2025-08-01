@@ -3,7 +3,7 @@ import {
   WeatherResponseSchema,
   WeatherResponse,
 } from "@guided/shared";
-import { OpenAI } from "openai";
+import OpenAI from "openai";
 import { extractWeatherQueryFromUserInput } from "../utils/extractWeatherQuery";
 import { extractCalendarActionFromUserInput } from "../utils/extractCalendarAction";
 import {
@@ -37,7 +37,6 @@ const weatherRoutes: WeatherRoutesPlugin = async (fastify, options) => {
     const locationName = `${city}, ${countryName}`;
     const today = getTodayForTimezone(timezone);
 
-    // Step 1: Extract weather query
     const weatherApiQuery = await extractWeatherQueryFromUserInput(
       openai,
       query,
@@ -45,10 +44,8 @@ const weatherRoutes: WeatherRoutesPlugin = async (fastify, options) => {
       locationName
     );
 
-    // Step 2: Fetch weather data
     const weatherData = await fetchWeatherData(weatherApiQuery);
 
-    // Step 3: Optionally extract calendar action
     const weatherSummary = weatherData.current?.condition?.text || "";
     const calendarAction = await extractCalendarActionFromUserInput(
       openai,
@@ -56,7 +53,6 @@ const weatherRoutes: WeatherRoutesPlugin = async (fastify, options) => {
       weatherSummary
     );
 
-    // Step 4: Execute calendar action if present and session is available
     let calendarResult: CalendarResult | undefined = undefined;
     if (calendarAction && sessionId) {
       try {
@@ -71,11 +67,9 @@ const weatherRoutes: WeatherRoutesPlugin = async (fastify, options) => {
         }
       } catch (error) {
         console.error("Calendar action failed:", error);
-        // Don't fail the entire request, just log the error
       }
     }
 
-    // Step 5: Humanize weather info
     const weatherResponse = await humanizeWeatherInfo(
       openai,
       weatherData,

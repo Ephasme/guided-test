@@ -1,5 +1,5 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { vi } from "vitest";
+import { vi, describe, it, expect, beforeEach } from "vitest";
 import { SMSRegistration } from "./SMSRegistration";
 import { useAuth } from "../hooks/useAuth";
 
@@ -8,7 +8,7 @@ vi.mock("../utils/getPublicIP", () => ({
   getPublicIP: vi.fn().mockResolvedValue("192.168.1.1"),
 }));
 
-const mockUseAuth = useAuth as jest.MockedFunction<typeof useAuth>;
+const mockUseAuth = vi.mocked(useAuth);
 
 describe("SMSRegistration", () => {
   beforeEach(() => {
@@ -16,7 +16,9 @@ describe("SMSRegistration", () => {
   });
 
   it("should not render when no session ID", () => {
-    mockUseAuth.mockReturnValue({ sessionId: null } as any);
+    mockUseAuth.mockReturnValue({ sessionId: null } as ReturnType<
+      typeof useAuth
+    >);
 
     render(<SMSRegistration />);
 
@@ -26,7 +28,9 @@ describe("SMSRegistration", () => {
   });
 
   it("should render when session ID is available", () => {
-    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as any);
+    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as ReturnType<
+      typeof useAuth
+    >);
 
     render(<SMSRegistration />);
 
@@ -36,12 +40,15 @@ describe("SMSRegistration", () => {
   });
 
   it("should show registration form when not registered", () => {
-    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as any);
+    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as ReturnType<
+      typeof useAuth
+    >);
 
-    (global.fetch as any).mockResolvedValueOnce({
+    const mockFetch = vi.mocked(fetch);
+    mockFetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ notificationsEnabled: false }),
-    });
+    } as Response);
 
     render(<SMSRegistration />);
 
@@ -49,21 +56,24 @@ describe("SMSRegistration", () => {
   });
 
   it("should handle registration", async () => {
-    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as any);
+    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as ReturnType<
+      typeof useAuth
+    >);
 
-    (global.fetch as any)
+    const mockFetch = vi.mocked(fetch);
+    mockFetch
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ notificationsEnabled: false }),
-      })
+      } as Response)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ success: true }),
-      })
+      } as Response)
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ notificationsEnabled: true }),
-      });
+      } as Response);
 
     render(<SMSRegistration />);
 
@@ -81,17 +91,20 @@ describe("SMSRegistration", () => {
   });
 
   it("should handle registration error", async () => {
-    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as any);
+    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as ReturnType<
+      typeof useAuth
+    >);
 
-    (global.fetch as any)
+    const mockFetch = vi.mocked(fetch);
+    mockFetch
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({ notificationsEnabled: false }),
-      })
+      } as Response)
       .mockResolvedValueOnce({
         ok: false,
         json: async () => ({ error: "Invalid phone number" }),
-      });
+      } as Response);
 
     render(<SMSRegistration />);
 

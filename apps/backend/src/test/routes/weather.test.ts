@@ -4,7 +4,7 @@ import { FastifyInstance } from "fastify";
 import weatherRoutes from "../../routes/weather";
 import { WeatherResponse } from "@guided/shared";
 import { CalendarServiceFactory } from "../../services/calendarServiceFactory";
-import { OpenAI } from "openai";
+import OpenAI from "openai";
 
 vi.mock("env-var", () => ({
   default: {

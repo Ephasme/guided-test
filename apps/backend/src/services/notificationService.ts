@@ -30,8 +30,6 @@ export class NotificationService {
     try {
       const usersWithSMS = await this.userStore.findUsersWithSMS();
 
-      console.log(`Found ${usersWithSMS.length} users with SMS`);
-
       for (const user of usersWithSMS) {
         await this.processUserNotifications(user.sessionId);
       }
@@ -44,7 +42,6 @@ export class NotificationService {
     try {
       const tokens = TokenService.getTokens(sessionId);
       if (!tokens) {
-        console.log(`No tokens found for session ${sessionId}`);
         return;
       }
 
@@ -59,12 +56,7 @@ export class NotificationService {
       const upcomingMeetings = await this.getUpcomingMeetings(calendarService);
 
       if (upcomingMeetings.length === 0) {
-        console.log(`No upcoming meetings found for user ${sessionId}`);
         return;
-      } else {
-        console.log(
-          `Found ${upcomingMeetings.length} upcoming meetings for user ${sessionId}`
-        );
       }
 
       for (const meeting of upcomingMeetings) {
@@ -139,19 +131,12 @@ export class NotificationService {
     );
 
     if (!shouldSend) {
-      console.log(
-        `Skipping notification for meeting ${eventId} - already sent or outside window`
-      );
       return;
     }
 
     try {
       const meetingLocation = meeting.location || meeting.description || "";
       const user = await this.userStore.getUser(sessionId);
-
-      console.log(`Meeting location: "${meetingLocation}"`);
-      console.log(`User resolved location: "${user?.resolvedLocation}"`);
-      console.log(`User default location: "${user?.defaultLocation}"`);
 
       const weatherContext: NotificationWeatherContext = {
         meetingLocation,
@@ -178,8 +163,6 @@ export class NotificationService {
       await this.twilioService.sendMessage(phoneNumber, messageBody);
 
       await this.notificationStore.markAsSent(sessionId, eventId);
-
-      console.log(`Sent weather notification for meeting: ${meetingTitle}`);
     } catch (error) {
       console.error(
         `Failed to send notification for meeting ${meeting.id}:`,
@@ -237,21 +220,21 @@ export class NotificationService {
 
   private calculateMeetingDuration(meeting: GoogleCalendarEvent): number {
     if (!meeting.start || !meeting.end) {
-      return 60; // Default 1 hour
+      return 60;
     }
 
     const startDateTime = meeting.start.dateTime || meeting.start.date;
     const endDateTime = meeting.end.dateTime || meeting.end.date;
 
     if (!startDateTime || !endDateTime) {
-      return 60; // Default 1 hour if we can't determine duration
+      return 60;
     }
 
     const startTime = DateTime.fromISO(startDateTime);
     const endTime = DateTime.fromISO(endDateTime);
 
     if (!startTime.isValid || !endTime.isValid) {
-      return 60; // Default 1 hour if invalid dates
+      return 60;
     }
 
     return Math.round(endTime.diff(startTime, "minutes").minutes);

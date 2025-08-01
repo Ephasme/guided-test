@@ -9,7 +9,7 @@ import { TwilioService } from "./services/twilioService";
 import { CalendarServiceFactory } from "./services/calendarServiceFactory";
 import { NotificationService } from "./services/notificationService";
 import { NotificationScheduler } from "./jobs/notificationScheduler";
-import { OpenAI } from "openai";
+import OpenAI from "openai";
 import { Twilio } from "twilio";
 import { config } from "./config";
 
