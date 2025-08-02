@@ -1,11 +1,12 @@
 # Weather Assistant
 
-A modern weather application that provides natural language weather queries with Google Calendar integration.
+A modern weather application that provides natural language weather queries with Google Calendar integration and SMS notifications.
 
 ## 🚀 Features
 
 - **Natural Language Queries**: Ask weather questions in plain English
 - **Google Calendar Integration**: Get weather context for your meetings
+- **SMS Notifications**: Receive weather alerts for upcoming meetings via SMS
 - **Real-time Weather Data**: Powered by WeatherAPI
 - **AI-Powered Responses**: Uses OpenAI to provide humanized weather information
 - **Modern UI**: Built with React, TypeScript, and Tailwind CSS
@@ -49,48 +50,6 @@ cp apps/frontend/.env.example apps/frontend/.env
 # Edit both .env files with your API keys
 ```
 
-#### Backend Environment Variables
-
-Edit `apps/backend/.env` with your actual API keys:
-
-```env
-# Weather API
-WEATHER_API_URL=https://api.weatherapi.com/v1/forecast.json
-WEATHER_API_KEY=your_weather_api_key
-
-# OpenAI
-OPENAI_API_KEY=your_openai_api_key
-
-# Google OAuth
-GOOGLE_CLIENT_ID=your_google_client_id
-GOOGLE_CLIENT_SECRET=your_google_client_secret
-
-# Security
-ENCRYPTION_KEY=your-32-character-encryption-key
-
-# Server Configuration
-PORT=3000
-NODE_ENV=development
-
-# Logging
-LOG_LEVEL=info
-```
-
-#### Frontend Environment Variables
-
-Edit `apps/frontend/.env` with your frontend configuration:
-
-```env
-# Google OAuth Configuration
-VITE_GOOGLE_CLIENT_ID=your_google_client_id
-
-# OAuth Redirect URI (optional, defaults to http://localhost:3000/auth/callback)
-VITE_REDIRECT_URI=http://localhost:3000/auth/callback
-
-# Google API Scopes (optional, defaults to calendar.readonly)
-VITE_GOOGLE_SCOPES=https://www.googleapis.com/auth/calendar.readonly
-```
-
 ### 3. Start Development Servers
 
 ```bash
@@ -100,7 +59,7 @@ pnpm dev
 
 This will start:
 
-- **Backend**: Fastify server on port 3000
+- **Backend**: Fastify server on port 3000 (includes notification service)
 - **Frontend**: Vite dev server (typically on port 5173)
 - **Shared library**: Build process in watch mode
 
@@ -134,8 +93,8 @@ guided-test/
 ├── apps/
 │   ├── backend/          # Fastify API server
 │   │   ├── src/
-│   │   │   ├── routes/   # API endpoints
-│   │   │   ├── services/ # Business logic
+│   │   │   ├── routes/   # API endpoints (weather, auth, sms)
+│   │   │   ├── services/ # Business logic (calendar, notification, twilio)
 │   │   │   ├── utils/    # Helper functions
 │   │   │   └── types/    # Type definitions
 │   │   └── test/         # Comprehensive test suite
@@ -192,9 +151,147 @@ Query parameters:
 - `GET /auth/session/:sessionId` - Check session status
 - `DELETE /auth/session/:sessionId` - Delete session
 
+### SMS Endpoints
+
+- `POST /register` - Register phone number for SMS notifications
+
+  - Headers: `x-session-id` (required)
+  - Body: `{ phoneNumber: string, clientIP?: string }`
+
+- `DELETE /unregister` - Unregister phone number from SMS notifications
+
+  - Headers: `x-session-id` (required)
+
+- `GET /status` - Get SMS notification status
+  - Headers: `x-session-id` (required)
+
+## 🔔 SMS Notifications
+
+The application includes an automated SMS notification system that:
+
+- **Monitors Calendar**: Checks for upcoming meetings in the next 1-2 hours
+- **Weather Integration**: Fetches weather data for meeting locations
+- **AI-Generated Messages**: Uses OpenAI to create personalized weather alerts
+- **Twilio Integration**: Sends SMS messages via Twilio service
+- **User Management**: Tracks user phone numbers and notification preferences
+
 ## 🔒 Security Considerations
 
 - Tokens are encrypted and stored in memory (consider Redis for production)
 - OAuth state validation prevents CSRF attacks
 - Input validation using Zod schemas
 - CORS configured for frontend communication
+- Phone number validation and formatting
+
+## 🚀 Production Readiness
+
+This application is currently designed for development and demonstration purposes. Here are the key improvements needed to make it production-ready:
+
+### 🗄️ Infrastructure & Data Management
+
+- **Database Migration**: Replace in-memory storage with PostgreSQL for user data, sessions, and notification history
+- **Redis Integration**: Use Redis for session management, caching, and job queues
+- **Environment Management**: Implement proper environment configuration for different deployment stages
+- **Containerization**: Dockerize the application for consistent deployment across environments
+- **Load Balancing**: Implement horizontal scaling with load balancers for high availability
+
+### 🔄 Notification Service Architecture
+
+- **Separate Service**: Extract notification service into its own microservice
+- **Job Scheduling**: Use CRON or a job scheduler (like Bull/BullMQ) for periodic notification checks
+- **Queue Management**: Implement message queues (Redis/Bull) for reliable SMS delivery
+- **Retry Logic**: Add exponential backoff and dead letter queues for failed notifications
+- **Rate Limiting**: Implement SMS rate limiting to prevent abuse and control costs
+
+### 🔐 Security Enhancements
+
+- **HTTPS Enforcement**: Ensure all communications use HTTPS in production
+- **API Rate Limiting**: Implement rate limiting for all API endpoints
+- **Input Sanitization**: Add comprehensive input validation and sanitization
+- **Audit Logging**: Implement detailed audit trails for user actions
+- **Secrets Management**: Use a secrets management service (AWS Secrets Manager, HashiCorp Vault)
+- **CORS Configuration**: Restrict CORS to specific domains in production
+
+### 📱 Mobile Application
+
+- **React Native App**: Create a mobile application for better user experience
+- **Push Notifications**: Implement push notifications alongside SMS
+- **Offline Support**: Add offline capabilities for weather data caching
+- **Native Calendar Integration**: Direct calendar access on mobile devices
+- **Biometric Authentication**: Add fingerprint/face ID authentication
+
+### 🔧 Technical Improvements
+
+- **Monitoring & Observability**:
+
+  - Implement APM (Application Performance Monitoring)
+  - Add structured logging with correlation IDs
+  - Set up health checks and readiness probes
+  - Implement distributed tracing
+
+- **Error Handling & Resilience**:
+
+  - Circuit breaker pattern for external API calls
+  - Graceful degradation when services are unavailable
+  - Comprehensive error boundaries and fallback mechanisms
+
+- **Performance Optimization**:
+  - Implement caching layers (Redis, CDN)
+  - Database query optimization and indexing
+  - API response compression
+  - Image optimization for weather icons
+
+### 💼 Business Features
+
+- **User Management**:
+
+  - User registration and authentication system
+  - Subscription management and billing integration
+  - User preferences and customization options
+  - Multi-tenant support for B2B customers
+
+- **Analytics & Insights**:
+
+  - Usage analytics and user behavior tracking
+  - Weather data analytics and trends
+  - Notification effectiveness metrics
+  - A/B testing framework
+
+- **Content & Localization**:
+  - Multi-language support
+  - Regional weather alerts and warnings
+  - Customizable notification templates
+  - Weather education content
+
+### 🌐 API & Integration Enhancements
+
+- **API Versioning**: Implement proper API versioning strategy
+- **Webhook Support**: Allow external systems to subscribe to weather events
+- **Third-party Integrations**:
+  - Slack/Discord notifications
+  - Email notifications as fallback
+  - IFTTT/Zapier integration
+  - Smart home device integration (Nest, Philips Hue)
+
+### 📊 Data & Analytics
+
+- **Weather Data Storage**: Store historical weather data for analytics
+- **User Behavior Analytics**: Track how users interact with weather information
+- **Predictive Analytics**: Implement ML models for weather prediction accuracy
+- **Data Export**: Allow users to export their weather history
+
+### 🚀 Deployment & DevOps
+
+- **CI/CD Pipeline**: Automated testing and deployment
+- **Infrastructure as Code**: Terraform/CloudFormation for infrastructure
+- **Blue-Green Deployments**: Zero-downtime deployment strategy
+- **Auto-scaling**: Automatic scaling based on load
+- **Disaster Recovery**: Backup and recovery procedures
+
+### 💰 Monetization & Business Model
+
+- **Freemium Model**: Basic features free, premium features paid
+- **API Access**: Provide API access for developers
+- **White-label Solutions**: Allow businesses to rebrand the service
+- **Weather Data Licensing**: Sell weather data insights to businesses
+- **Partnership Opportunities**: Collaborate with weather stations and meteorologists
