@@ -1,0 +1,20 @@
+meta {
+  name: Unregister SMS
+  type: http
+  seq: 2
+}
+
+delete {
+  url: {{host}}/sms/unregister
+  body: none
+  auth: none
+}
+
+headers {
+  x-session-id: {{sessionId}}
+}
+
+docs {
+  Unregister a phone number from SMS notifications.
+  Removes the phone number from the user's profile.
+} 

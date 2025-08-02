@@ -1,0 +1,16 @@
+meta {
+  name: Check Session
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/auth/session/{{sessionId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Check if a session has valid tokens.
+  Returns success status and whether tokens exist for the session.
+} 

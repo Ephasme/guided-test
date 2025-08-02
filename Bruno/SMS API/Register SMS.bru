@@ -1,0 +1,36 @@
+meta {
+  name: Register SMS
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{host}}/sms/register
+  body: json
+  auth: none
+}
+
+headers {
+  Content-Type: application/json
+  x-session-id: {{sessionId}}
+}
+
+body:json {
+  {
+    "phoneNumber": "+33123456789",
+    "clientIP": "168.220.143.250"
+  }
+}
+
+docs {
+  Register a phone number for SMS notifications.
+  The API will:
+  1. Validate and format the phone number
+  2. Resolve user location from IP
+  3. Create or update user profile
+  4. Store phone number for SMS notifications
+  
+  Phone number formats supported:
+  - International: +33123456789
+  - French: 0123456789
+} 

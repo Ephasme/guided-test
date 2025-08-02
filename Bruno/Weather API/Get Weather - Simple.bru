@@ -1,0 +1,21 @@
+meta {
+  name: Get Weather - Simple
+  type: http
+  seq: 2
+}
+
+get {
+  url: {{host}}/weather
+  body: none
+  auth: none
+}
+
+params:query {
+  query: What's the weather like today?
+  clientIP: 168.220.143.250
+}
+
+docs {
+  Simple weather query without calendar integration.
+  Useful for testing basic weather functionality.
+} 

@@ -1,0 +1,16 @@
+meta {
+  name: Delete Session
+  type: http
+  seq: 3
+}
+
+delete {
+  url: {{host}}/auth/session/{{sessionId}}
+  body: none
+  auth: none
+}
+
+docs {
+  Delete a session and remove its stored tokens.
+  Returns success status after deletion.
+} 

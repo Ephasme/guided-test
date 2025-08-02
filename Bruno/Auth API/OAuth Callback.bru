@@ -1,0 +1,28 @@
+meta {
+  name: OAuth Callback
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/auth/callback
+  body: none
+  auth: none
+}
+
+params:query {
+  code: {{authCode}}
+  state: {{state}}
+}
+
+docs {
+  OAuth callback endpoint for Google authentication.
+  This endpoint:
+  1. Receives authorization code from Google
+  2. Exchanges code for access tokens
+  3. Generates a session ID
+  4. Stores tokens for the session
+  5. Redirects to frontend with session_id and state
+  
+  Note: This is typically called by Google OAuth flow, not directly.
+} 

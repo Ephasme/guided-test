@@ -1,0 +1,27 @@
+meta {
+  name: Get Weather
+  type: http
+  seq: 1
+}
+
+get {
+  url: {{host}}/weather
+  body: none
+  auth: none
+}
+
+params:query {
+  query: What's the weather for my next meeting?
+  clientIP: 168.220.143.250
+  sessionId: {{sessionId}}
+}
+
+docs {
+  Get weather information based on a natural language query.
+  The API will:
+  1. Extract weather query from user input
+  2. Resolve user location from IP
+  3. Fetch weather data
+  4. Extract calendar actions if sessionId is provided
+  5. Return humanized weather response
+} 
