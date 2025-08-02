@@ -1,0 +1,14 @@
+[phases.setup]
+nixPkgs = ["nodejs", "pnpm"]
+
+[phases.install]
+cmds = ["pnpm install"]
+
+[phases.build]
+cmds = ["pnpm turbo build --filter=backend"]
+
+[start]
+cmd = "cd apps/backend && pnpm start"
+
+[variables]
+NODE_ENV = "production"
