@@ -19,10 +19,13 @@ RUN pnpm install
 COPY . .
 
 # Build the backend (this will also build shared dependencies)
+RUN ls -R apps/backend/src/types | head -100 && \
+    ls -l apps/backend/src/routes && \
+    cat apps/backend/src/routes/weather.ts | head -80
+
 RUN pnpm turbo build --filter=backend
 
-# Set working directory to backend
-WORKDIR /app/apps/backend
+# Keep working directory in backend
 
 EXPOSE 3000
 
