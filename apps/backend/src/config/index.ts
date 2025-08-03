@@ -33,4 +33,8 @@ export const config = {
       .default("900000")
       .asIntPositive(),
   },
+  oauth: {
+    redirectUri: env.get("OAUTH_REDIRECT_URI").default("http://localhost:3000/auth/callback").asString(),
+    frontendUrl: env.get("FRONTEND_URL").default("http://localhost:5173").asString(),
+  },
 };

@@ -23,7 +23,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
       const oauth2Client = new google.auth.OAuth2(
         config.google.clientId,
         config.google.clientSecret,
-        "http://localhost:3000/auth/callback"
+        config.oauth.redirectUri
       );
 
       const { tokens } = await oauth2Client.getToken(code);
@@ -36,7 +36,7 @@ const authRoutes: FastifyPluginAsync = async (fastify) => {
         expires_in: tokens.expiry_date || 0,
       });
 
-      const frontendUrl = new URL("http://localhost:5173");
+      const frontendUrl = new URL(config.oauth.frontendUrl);
       frontendUrl.searchParams.set("session_id", sessionId);
       frontendUrl.searchParams.set("state", state);
 
