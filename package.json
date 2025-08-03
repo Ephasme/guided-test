@@ -9,6 +9,7 @@
     "start": "turbo run start",
     "build": "turbo run build",
     "lint": "turbo run lint",
+    "lint:ci": "turbo run lint:ci",
     "clean": "turbo run clean",
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",

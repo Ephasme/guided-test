@@ -1,5 +1,6 @@
 import js from "@eslint/js";
 import tseslint from "typescript-eslint";
+import importPlugin from "eslint-plugin-import";
 
 export default tseslint.config(
   {
@@ -14,6 +15,18 @@ export default tseslint.config(
         project: "./tsconfig.json",
       },
     },
+    plugins: {
+      import: importPlugin,
+    },
+    settings: {
+      "import/resolver": {
+        typescript: { project: "./tsconfig.json" },
+        node: {
+          extensions: [".js", ".jsx", ".ts", ".tsx"],
+          caseSensitive: true,
+        },
+      },
+    },
     rules: {
       "@typescript-eslint/no-unused-vars": "error",
       "@typescript-eslint/no-explicit-any": "warn",
@@ -21,6 +34,7 @@ export default tseslint.config(
       "@typescript-eslint/explicit-module-boundary-types": "off",
       "prefer-const": "error",
       "no-var": "error",
+      "import/no-unresolved": "error",
     },
   }
 );
