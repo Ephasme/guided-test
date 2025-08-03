@@ -61,13 +61,18 @@ async function startServer() {
   );
   notificationScheduler.start();
 
-  server.listen({ port: config.server.port }, (err) => {
-    if (err) {
-      server.log.error(err);
-      process.exit(1);
+  server.listen(
+    { port: config.server.port, host: config.server.host },
+    (err) => {
+      if (err) {
+        server.log.error(err);
+        process.exit(1);
+      }
+      console.log(
+        `Server running on http://${config.server.host}:${config.server.port}`
+      );
     }
-    console.log(`Server running on http://localhost:${config.server.port}`);
-  });
+  );
 }
 
 startServer().catch((err) => {

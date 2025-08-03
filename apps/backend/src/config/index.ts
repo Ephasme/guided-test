@@ -25,6 +25,7 @@ export const config = {
   },
   server: {
     port: env.get("PORT").default("3000").asPortNumber(),
+    host: env.get("HOST").default("0.0.0.0").asString(),
   },
   notification: {
     intervalMs: env
