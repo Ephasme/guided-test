@@ -1,10 +1,12 @@
+import { API_BASE_URL } from "../config/api";
+
 export interface SMSStatus {
   notificationsEnabled: boolean;
   phoneNumber?: string;
 }
 
 export const fetchSMSStatus = async (sessionId: string): Promise<SMSStatus> => {
-  const response = await fetch(`http://localhost:3000/sms/status`, {
+  const response = await fetch(`${API_BASE_URL}/sms/status`, {
     headers: {
       "x-session-id": sessionId,
     },
@@ -22,7 +24,7 @@ export const registerSMS = async (
   phoneNumber: string,
   clientIP: string
 ): Promise<void> => {
-  const response = await fetch(`http://localhost:3000/sms/register`, {
+  const response = await fetch(`${API_BASE_URL}/sms/register`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -41,7 +43,7 @@ export const registerSMS = async (
 };
 
 export const unregisterSMS = async (sessionId: string): Promise<void> => {
-  const response = await fetch(`http://localhost:3000/sms/unregister`, {
+  const response = await fetch(`${API_BASE_URL}/sms/unregister`, {
     method: "DELETE",
     headers: {
       "x-session-id": sessionId,

@@ -1,4 +1,5 @@
 import type { WeatherResponse } from "@guided/shared";
+import { API_BASE_URL } from "../config/api";
 
 export const fetchWeather = async (
   query: string,
@@ -19,7 +20,7 @@ export const fetchWeather = async (
     const timeoutId = setTimeout(() => controller.abort(), 30000);
 
     const response = await fetch(
-      `http://localhost:3000/weather?${params.toString()}`,
+      `${API_BASE_URL}/weather?${params.toString()}`,
       { signal: controller.signal }
     );
     clearTimeout(timeoutId);
