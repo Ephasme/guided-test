@@ -35,6 +35,8 @@ async function startServer() {
   await server.register(cors, {
     origin: true,
     credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "x-session-id"],
   });
 
   server.register(weatherRoutes, {
