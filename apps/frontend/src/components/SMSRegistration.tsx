@@ -7,7 +7,7 @@ import {
 } from "../utils/validatePhoneNumber";
 
 export function SMSRegistration() {
-  const { sessionId } = useAuth();
+  const { sessionId, isAuthenticated } = useAuth();
   const {
     status,
     isLoadingStatus,
@@ -51,7 +51,7 @@ export function SMSRegistration() {
     }
   };
 
-  if (!sessionId) {
+  if (!sessionId || !isAuthenticated) {
     return null;
   }
 

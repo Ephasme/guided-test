@@ -50,7 +50,12 @@ export const useAuth = () => {
   });
 
   useEffect(() => {
-    if (sessionId && isSessionValid !== undefined) {
+    if (!sessionId) {
+      setAuthState({
+        sessionId: null,
+        isAuthenticated: false,
+      });
+    } else if (isSessionValid !== undefined) {
       if (isSessionValid) {
         setAuthState({
           sessionId,
@@ -118,6 +123,14 @@ export const useAuth = () => {
     if (sessionId) {
       await logoutMutation.mutateAsync(sessionId);
     }
+    // Immediately clear auth state and invalidate queries
+    localStorage.removeItem("google_session_id");
+    setAuthState({
+      sessionId: null,
+      isAuthenticated: false,
+    });
+    queryClient.invalidateQueries({ queryKey: ["auth", "session"] });
+    queryClient.clear();
   };
 
   return {

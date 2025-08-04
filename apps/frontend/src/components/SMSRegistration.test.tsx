@@ -32,9 +32,58 @@ describe("SMSRegistration", () => {
   });
 
   it("should not render when no session ID", () => {
-    mockUseAuth.mockReturnValue({ sessionId: null } as ReturnType<
-      typeof useAuth
-    >);
+    mockUseAuth.mockReturnValue({
+      sessionId: null,
+      isAuthenticated: false,
+    } as ReturnType<typeof useAuth>);
+    mockUseSMS.mockReturnValue({
+      status: undefined,
+      isLoadingStatus: false,
+      statusError: null,
+      registerSMSNotification: vi.fn(),
+      unregisterSMSNotification: vi.fn(),
+      isRegistering: false,
+      isUnregistering: false,
+      registerError: null,
+      unregisterError: null,
+    });
+
+    renderWithQueryClient(<SMSRegistration />);
+
+    expect(
+      screen.queryByText("📱 SMS Weather Notifications")
+    ).not.toBeInTheDocument();
+  });
+
+  it("should not render when not authenticated", () => {
+    mockUseAuth.mockReturnValue({
+      sessionId: "test-session",
+      isAuthenticated: false,
+    } as ReturnType<typeof useAuth>);
+    mockUseSMS.mockReturnValue({
+      status: undefined,
+      isLoadingStatus: false,
+      statusError: null,
+      registerSMSNotification: vi.fn(),
+      unregisterSMSNotification: vi.fn(),
+      isRegistering: false,
+      isUnregistering: false,
+      registerError: null,
+      unregisterError: null,
+    });
+
+    renderWithQueryClient(<SMSRegistration />);
+
+    expect(
+      screen.queryByText("📱 SMS Weather Notifications")
+    ).not.toBeInTheDocument();
+  });
+
+  it("should not render when sessionId is null and not authenticated", () => {
+    mockUseAuth.mockReturnValue({
+      sessionId: null,
+      isAuthenticated: false,
+    } as ReturnType<typeof useAuth>);
     mockUseSMS.mockReturnValue({
       status: undefined,
       isLoadingStatus: false,
@@ -55,9 +104,10 @@ describe("SMSRegistration", () => {
   });
 
   it("should render when session ID is available", () => {
-    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as ReturnType<
-      typeof useAuth
-    >);
+    mockUseAuth.mockReturnValue({
+      sessionId: "test-session",
+      isAuthenticated: true,
+    } as ReturnType<typeof useAuth>);
     mockUseSMS.mockReturnValue({
       status: undefined,
       isLoadingStatus: false,
@@ -78,9 +128,10 @@ describe("SMSRegistration", () => {
   });
 
   it("should show registration form when not registered", () => {
-    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as ReturnType<
-      typeof useAuth
-    >);
+    mockUseAuth.mockReturnValue({
+      sessionId: "test-session",
+      isAuthenticated: true,
+    } as ReturnType<typeof useAuth>);
     mockUseSMS.mockReturnValue({
       status: { notificationsEnabled: false },
       isLoadingStatus: false,
@@ -101,9 +152,10 @@ describe("SMSRegistration", () => {
   it("should handle registration", async () => {
     const mockRegisterSMS = vi.fn().mockResolvedValue(undefined);
 
-    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as ReturnType<
-      typeof useAuth
-    >);
+    mockUseAuth.mockReturnValue({
+      sessionId: "test-session",
+      isAuthenticated: true,
+    } as ReturnType<typeof useAuth>);
     mockUseSMS.mockReturnValue({
       status: { notificationsEnabled: false },
       isLoadingStatus: false,
@@ -130,9 +182,10 @@ describe("SMSRegistration", () => {
   });
 
   it("should handle registration error", () => {
-    mockUseAuth.mockReturnValue({ sessionId: "test-session" } as ReturnType<
-      typeof useAuth
-    >);
+    mockUseAuth.mockReturnValue({
+      sessionId: "test-session",
+      isAuthenticated: true,
+    } as ReturnType<typeof useAuth>);
     mockUseSMS.mockReturnValue({
       status: { notificationsEnabled: false },
       isLoadingStatus: false,
