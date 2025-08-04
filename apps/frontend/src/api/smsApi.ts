@@ -12,6 +12,13 @@ export const fetchSMSStatus = async (sessionId: string): Promise<SMSStatus> => {
     },
   });
 
+  if (response.status === 404) {
+    return {
+      notificationsEnabled: false,
+      phoneNumber: undefined,
+    };
+  }
+
   if (!response.ok) {
     throw new Error("Failed to fetch SMS status");
   }

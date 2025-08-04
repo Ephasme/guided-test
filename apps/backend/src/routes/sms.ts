@@ -107,6 +107,7 @@ const smsRoutes: SMSRoutesPlugin = async (fastify, options) => {
 
     try {
       const user = await userStore.getUser(sessionId);
+
       if (!user) {
         return reply.status(404).send({ error: "User not found" });
       }
