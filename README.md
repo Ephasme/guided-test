@@ -20,6 +20,36 @@ This is a monorepo built with:
 - **Shared**: Common types and schemas
 - **Build Tool**: Turbo for monorepo management
 
+### 🤖 OpenAI Integration
+
+The backend leverages OpenAI's GPT-3.5-turbo to intelligently process weather requests through a sophisticated prompt engineering system:
+
+#### **Weather Query Processing**
+
+1. **Natural Language Parsing**: User queries like "What's the weather like tomorrow?" are processed by OpenAI to extract structured WeatherAPI parameters
+2. **Prompt Engineering**: The system uses carefully crafted prompts that include:
+   - JSON schema definitions for WeatherAPI compatibility
+   - Context about current date and user location
+   - Rules for handling relative dates and location inference
+3. **JSON Validation**: Responses are validated against Zod schemas to ensure API compatibility
+
+#### **Weather Response Generation**
+
+1. **Data Humanization**: Raw weather data from WeatherAPI is transformed into conversational responses
+2. **Context Integration**: Calendar data (when available) is incorporated to provide personalized weather advice
+3. **Multi-step Processing**:
+   - Extract weather query parameters from user input
+   - Fetch weather data from WeatherAPI
+   - Generate humanized weather summaries
+   - Integrate calendar actions when relevant
+
+#### **Error Handling & Retry Logic**
+
+- Automatic retry mechanism with exponential backoff
+- JSON parsing validation with fallback strategies
+- Timeout protection implemented at the service level (15-30 second limits)
+- Limited graceful degradation: calendar actions fail silently, but weather query parsing and response generation fail completely when OpenAI is unavailable
+
 ## 📦 Installation & Setup
 
 ### Prerequisites
